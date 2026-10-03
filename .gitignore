@@ -62,3 +62,5 @@ update-contact.js
 update-contact2.js
 update-db-images.js
 update-gp.js
+
+.vercel

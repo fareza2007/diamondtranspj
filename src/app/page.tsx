@@ -8,6 +8,8 @@ export const metadata = {
   description: "Platform rental mobil terpercaya di Lombok dan Bali. Armada lengkap, harga transparan, konfirmasi instan via WhatsApp.",
 };
 
+export const dynamic = "force-dynamic";
+
 const reviews = [
   {
     name: "Rizal A.",

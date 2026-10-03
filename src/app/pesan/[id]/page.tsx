@@ -6,6 +6,8 @@ export const metadata = {
   title: "Formulir Pemesanan - Diamond Trans",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function PesanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   

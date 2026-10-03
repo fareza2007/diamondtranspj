@@ -6,6 +6,8 @@ export const metadata = {
   description: "Pilih mobil terbaik untuk perjalanan Anda di Lombok dan Bali.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ArmadaPage() {
   // Fetch cars from database
   let cars: any[] = [];
