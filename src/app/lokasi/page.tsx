@@ -126,7 +126,7 @@ export default function LokasiPage() {
             Hubungi kami langsung. Kami siap mengakomodasi rute khusus di luar daftar standar di atas.
           </p>
           <a
-            href="https://wa.me/6283129442611?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20tanya%20apakah%20anda%20melayani%20rute%20ke..."
+            href="https://wa.me/6285923634253?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20tanya%20apakah%20anda%20melayani%20rute%20ke..."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 bg-gold hover:bg-gold/90 text-white font-bold px-8 py-4 rounded-xl transition-all shadow-lg text-lg"

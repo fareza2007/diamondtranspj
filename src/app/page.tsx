@@ -213,7 +213,7 @@ export default async function Home() {
             Hubungi kami sekarang dan dapatkan konfirmasi ketersediaan armada dalam hitungan menit.
           </p>
           <a
-            href="https://wa.me/6283129442611?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20mengetahui%20ketersediaan%20armada."
+            href="https://wa.me/6285923634253?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20mengetahui%20ketersediaan%20armada."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold px-8 py-4 rounded-xl transition-colors shadow-lg text-lg"

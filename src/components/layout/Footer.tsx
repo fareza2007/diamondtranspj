@@ -35,7 +35,7 @@ export default function Footer() {
               Layanan rental mobil terpercaya untuk wisatawan di Lombok dan Bali. Armada terawat, harga transparan, konfirmasi cepat via WhatsApp.
             </p>
             <a
-              href="https://wa.me/6283129442611"
+              href="https://wa.me/6285923634253"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold px-4 py-2.5 rounded-lg transition-colors text-sm"
@@ -93,7 +93,7 @@ export default function Footer() {
 
             <h3 className="font-bold text-white mb-3 text-sm uppercase tracking-wider">Kontak</h3>
             <p className="text-sm text-white/60">
-              📞 0877-3969-4731<br />
+              📞 0859-2363-4253<br />
               📧 diamondtrans2026@gmail.com<br />
               📍 Lombok, Nusa Tenggara Barat
             </p>
