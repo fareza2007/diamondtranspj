@@ -9,6 +9,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
+  if (pathname?.startsWith("/admin")) return null;
+
   const links = [
     { label: 'Beranda', href: '/' },
     { label: 'Armada Kami', href: '/armada' },

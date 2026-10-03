@@ -40,6 +40,17 @@ model Car {
   bookings Booking[]
 }
 
+model GpEvent {
+  id          Int      @id @default(autoincrement())
+  name        String
+  start_date  DateTime
+  end_date    DateTime
+  location    String?
+  description String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+}
+
 model Booking {
   id               Int      @id @default(autoincrement())
   car_id           Int
@@ -54,7 +65,7 @@ model Booking {
   status           String   @default("pending") // "pending" | "confirmed" | "completed" | "cancelled"
   created_at       DateTime @default(now())
 
-  car     Car     @relation(fields: [car_id], references: [id])
+  car     Car     @relation(fields: [car_id], references: [id], onDelete: Cascade)
   review  Review?
 }
 

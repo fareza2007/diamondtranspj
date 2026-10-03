@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import BookingClient from "./BookingClient";
+import type { PublicGpEvent } from "@/lib/gp";
 
 export const metadata = {
   title: "Formulir Pemesanan - Diamond Trans",
@@ -12,6 +13,7 @@ export default async function PesanPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   
   let car = null;
+  let events: PublicGpEvent[] = [];
   
   try {
     car = await prisma.car.findUnique({
@@ -19,6 +21,15 @@ export default async function PesanPage({ params }: { params: Promise<{ id: stri
     });
   } catch (error) {
     console.error("DB error:", error);
+  }
+  try {
+    const gpEvents = await prisma.gpEvent.findMany({
+      where: { is_active: true },
+      orderBy: { start_date: "asc" },
+    });
+    events = JSON.parse(JSON.stringify(gpEvents));
+  } catch {
+    events = [];
   }
 
   if (!car) {
@@ -72,7 +83,7 @@ export default async function PesanPage({ params }: { params: Promise<{ id: stri
           {/* Main Form */}
           <div className="md:col-span-2">
             <div className="bg-[#0a0a0a] rounded-2xl p-6 md:p-8 border border-white/10 shadow-sm">
-              <BookingClient car={car} />
+              <BookingClient car={car} events={events} />
             </div>
           </div>
         </div>

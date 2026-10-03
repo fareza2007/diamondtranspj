@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { datesOverlapEvent, formatEventRange, type PublicGpEvent } from '@/lib/gp';
 
-export default function BookingClient({ car }: { car: any }) {
+export default function BookingClient({ car, events = [] }: { car: any; events?: PublicGpEvent[] }) {
   const defaultType = car.with_keyless_available ? 'lepas_kunci' : 'dengan_sopir';
 
   const [formData, setFormData] = useState({
@@ -52,6 +53,9 @@ export default function BookingClient({ car }: { car: any }) {
     return newErrors;
   };
 
+  const matchedEvent = datesOverlapEvent(formData.startDate, formData.endDate, events);
+  const isGpEvent = formData.isGpEvent || Boolean(matchedEvent);
+
   const getDays = () => {
     if (!formData.startDate || !formData.endDate) return 0;
     const diff = new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime();
@@ -60,11 +64,11 @@ export default function BookingClient({ car }: { car: any }) {
 
   const getBasePrice = () => {
     if (formData.type === 'lepas_kunci') {
-      return formData.isGpEvent
+      return isGpEvent
         ? (car.price_lepas_kunci_gp ?? car.price_lepas_kunci)
         : car.price_lepas_kunci;
     } else {
-      return formData.isGpEvent
+      return isGpEvent
         ? (car.price_dengan_sopir_gp ?? car.price_dengan_sopir)
         : car.price_dengan_sopir;
     }
@@ -73,7 +77,7 @@ export default function BookingClient({ car }: { car: any }) {
   const totalPrice = getDays() * (getBasePrice() || 0);
 
   const isGpKeylessBlocked =
-    formData.isGpEvent &&
+    isGpEvent &&
     formData.type === 'lepas_kunci' &&
     car.price_lepas_kunci_gp === null;
 
@@ -130,7 +134,7 @@ export default function BookingClient({ car }: { car: any }) {
 🚗 *DETAIL MOBIL*
 - Mobil: ${car.name} (${car.brand})
 - Tipe: ${formData.type === 'lepas_kunci' ? 'Lepas Kunci' : 'Dengan Sopir'}${durationNote}
-- Event MotoGP: ${formData.isGpEvent ? '✅ Ya' : '❌ Tidak'}
+- Event MotoGP: ${isGpEvent ? `✅ Ya${matchedEvent ? ` (${matchedEvent.name})` : ''}` : '❌ Tidak'}
 
 👤 *DATA PENYEWA*
 - Nama: ${formData.name}
@@ -153,22 +157,56 @@ Apakah unit ini tersedia? Terima kasih 🙏`;
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
 
-      {/* GP Checkbox */}
-      <label className="flex items-start gap-3 bg-gold/10 border border-gold/30 p-4 rounded-xl cursor-pointer hover:bg-gold/20 transition-colors">
-        <input
-          type="checkbox"
-          name="isGpEvent"
-          checked={formData.isGpEvent}
-          onChange={handleChange}
-          className="mt-1 w-4 h-4 accent-gold shrink-0"
-        />
-        <div>
-          <p className="font-bold text-white text-sm">🏁 Sewa di Periode Event MotoGP?</p>
-          <p className="text-xs text-white/70 mt-0.5">
-            Harga khusus event berlaku. Beberapa mobil wajib menggunakan sopir saat event GP.
-          </p>
+      {events.length > 0 && (
+        <div className="bg-gold/10 border border-gold/30 p-4 rounded-xl space-y-3">
+          <p className="font-bold text-white text-sm">🏁 Event GP yang sedang / akan berlangsung</p>
+          <ul className="space-y-2">
+            {events.map((event) => (
+              <li key={event.id} className="text-xs text-white/80">
+                <span className="font-semibold text-gold">{event.name}</span>
+                <span className="text-white/60"> · {formatEventRange(event.start_date, event.end_date)}</span>
+                {event.location ? <span className="text-white/50"> · {event.location}</span> : null}
+              </li>
+            ))}
+          </ul>
+          {matchedEvent ? (
+            <p className="text-xs text-gold">
+              Tanggal sewa Anda masuk periode <strong>{matchedEvent.name}</strong>. Harga khusus event diterapkan otomatis.
+            </p>
+          ) : (
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="isGpEvent"
+                checked={formData.isGpEvent}
+                onChange={handleChange}
+                className="mt-1 w-4 h-4 accent-gold shrink-0"
+              />
+              <span className="text-xs text-white/70">
+                Centang jika sewa tetap di periode event GP meski tanggal di luar daftar di atas.
+              </span>
+            </label>
+          )}
         </div>
-      </label>
+      )}
+
+      {events.length === 0 && (
+        <label className="flex items-start gap-3 bg-gold/10 border border-gold/30 p-4 rounded-xl cursor-pointer hover:bg-gold/20 transition-colors">
+          <input
+            type="checkbox"
+            name="isGpEvent"
+            checked={formData.isGpEvent}
+            onChange={handleChange}
+            className="mt-1 w-4 h-4 accent-gold shrink-0"
+          />
+          <div>
+            <p className="font-bold text-white text-sm">🏁 Sewa di Periode Event MotoGP?</p>
+            <p className="text-xs text-white/70 mt-0.5">
+              Harga khusus event berlaku. Beberapa mobil wajib menggunakan sopir saat event GP.
+            </p>
+          </div>
+        </label>
+      )}
 
       {/* Personal Info */}
       <div>
