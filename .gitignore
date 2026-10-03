@@ -39,3 +39,26 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database (jangan commit file DB lokal)
+*.db
+*.db-journal
+prisma/dev.db
+
+# script utilitas sekali pakai
+add-veloz.js
+crop.js
+download-cars.js
+download-missing.js
+fix-3cars.js
+fix-inputs.js
+import-carphotos.js
+process-veloz-img.js
+remove-bg.js
+standardize-images.js
+update-3custom.js
+update-all-custom.js
+update-contact.js
+update-contact2.js
+update-db-images.js
+update-gp.js

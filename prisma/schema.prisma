@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Admin {
+  id            Int      @id @default(autoincrement())
+  username      String
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+}
+
+model Car {
+  id                      Int      @id @default(autoincrement())
+  name                    String
+  brand                   String
+  transmission            String   
+  seats                   Int
+  price_per_day           Float    // Starting price for display
+  
+  price_lepas_kunci       Float?   // Harga hari biasa (24 jam)
+  price_dengan_sopir      Float?   // Harga hari biasa (12/24 jam tergantung mobil)
+  price_lepas_kunci_gp    Float?   // Harga event GP (24 jam)
+  price_dengan_sopir_gp   Float?   // Harga event GP (12/24 jam)
+  
+  driver_duration_hours   Int      @default(12) // Biasanya 12 jam, zenix 24 jam
+  
+  image_url               String?
+  with_driver_available   Boolean  @default(true)
+  with_keyless_available  Boolean  @default(true) // Lepas Kunci
+  status                  String   @default("available") 
+  created_at              DateTime @default(now())
+
+  bookings Booking[]
+}
+
+model Booking {
+  id               Int      @id @default(autoincrement())
+  car_id           Int
+  customer_name    String
+  customer_phone   String
+  start_date       DateTime
+  end_date         DateTime
+  pickup_location  String
+  dropoff_location String
+  rental_type      String   // "lepas_kunci" | "dengan_sopir"
+  total_price      Float
+  status           String   @default("pending") // "pending" | "confirmed" | "completed" | "cancelled"
+  created_at       DateTime @default(now())
+
+  car     Car     @relation(fields: [car_id], references: [id])
+  review  Review?
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  booking_id    Int?     @unique
+  customer_name String
+  rating        Int
+  comment       String?
+  created_at    DateTime @default(now())
+
+  booking Booking? @relation(fields: [booking_id], references: [id])
+}
