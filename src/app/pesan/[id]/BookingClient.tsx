@@ -134,7 +134,7 @@ export default function BookingClient({ car, events = [] }: { car: any; events?:
 🚗 *DETAIL MOBIL*
 - Mobil: ${car.name} (${car.brand})
 - Tipe: ${formData.type === 'lepas_kunci' ? 'Lepas Kunci' : 'Dengan Sopir'}${durationNote}
-- Event MotoGP: ${isGpEvent ? `✅ Ya${matchedEvent ? ` (${matchedEvent.name})` : ''}` : '❌ Tidak'}
+- Event Khusus: ${isGpEvent ? `Ya${matchedEvent ? ` (${matchedEvent.name})` : ''}` : 'Tidak'}
 
 👤 *DATA PENYEWA*
 - Nama: ${formData.name}
@@ -159,7 +159,7 @@ Apakah unit ini tersedia? Terima kasih 🙏`;
 
       {events.length > 0 && (
         <div className="bg-gold/10 border border-gold/30 p-4 rounded-xl space-y-3">
-          <p className="font-bold text-white text-sm">🏁 Event GP yang sedang / akan berlangsung</p>
+          <p className="font-bold text-white text-sm uppercase tracking-wide">Event Aktif</p>
           <ul className="space-y-2">
             {events.map((event) => (
               <li key={event.id} className="text-xs text-white/80">
@@ -190,23 +190,7 @@ Apakah unit ini tersedia? Terima kasih 🙏`;
         </div>
       )}
 
-      {events.length === 0 && (
-        <label className="flex items-start gap-3 bg-gold/10 border border-gold/30 p-4 rounded-xl cursor-pointer hover:bg-gold/20 transition-colors">
-          <input
-            type="checkbox"
-            name="isGpEvent"
-            checked={formData.isGpEvent}
-            onChange={handleChange}
-            className="mt-1 w-4 h-4 accent-gold shrink-0"
-          />
-          <div>
-            <p className="font-bold text-white text-sm">🏁 Sewa di Periode Event MotoGP?</p>
-            <p className="text-xs text-white/70 mt-0.5">
-              Harga khusus event berlaku. Beberapa mobil wajib menggunakan sopir saat event GP.
-            </p>
-          </div>
-        </label>
-      )}
+
 
       {/* Personal Info */}
       <div>
