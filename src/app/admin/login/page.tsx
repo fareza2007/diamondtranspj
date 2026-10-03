@@ -3,6 +3,7 @@ import { getAdminSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 
 export const metadata = { title: "Masuk Admin - Diamond Trans" };
+export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage() {
   const session = await getAdminSession();
