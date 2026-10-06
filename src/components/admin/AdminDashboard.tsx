@@ -146,7 +146,8 @@ export default function AdminDashboard({
           });
           form.set("image_url_direct", newBlob.url);
         } catch (err) {
-          setMessage("Gagal mengupload gambar. Pastikan Vercel Blob sudah aktif di dashboard Vercel Anda.");
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          setMessage(`Gagal mengupload: ${errorMessage}`);
           setSaving(false);
           return;
         }
