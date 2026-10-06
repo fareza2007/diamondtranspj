@@ -37,8 +37,12 @@ export async function PATCH(
     const price_dengan_sopir_gp = parseOptionalNumber(form.get("price_dengan_sopir_gp"));
 
     const file = form.get("image");
+    const directUrl = form.get("image_url_direct");
     let image_url: string | undefined;
-    if (file instanceof File && file.size > 0) {
+
+    if (directUrl) {
+      image_url = String(directUrl);
+    } else if (file instanceof File && file.size > 0) {
       image_url = await processCarImage(file);
     }
 

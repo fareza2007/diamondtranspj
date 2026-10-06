@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatEventRange } from "@/lib/gp";
+import { upload } from '@vercel/blob/client';
 
 type CarRecord = {
   id: number;
@@ -136,7 +137,20 @@ export default function AdminDashboard({
       Object.entries(carForm).forEach(([key, value]) => {
         form.set(key, String(value));
       });
-      if (imageFile) form.set("image", imageFile);
+
+      if (imageFile) {
+        try {
+          const newBlob = await upload(imageFile.name, imageFile, {
+            access: 'public',
+            handleUploadUrl: '/api/admin/upload',
+          });
+          form.set("image_url_direct", newBlob.url);
+        } catch (err) {
+          setMessage("Gagal mengupload gambar. Pastikan Vercel Blob sudah aktif di dashboard Vercel Anda.");
+          setSaving(false);
+          return;
+        }
+      }
 
       const url = editingId === "new" ? "/api/admin/cars" : `/api/admin/cars/${editingId}`;
       const method = editingId === "new" ? "POST" : "PATCH";

@@ -66,8 +66,10 @@ export async function POST(req: NextRequest) {
     }
 
     const file = form.get("image");
-    let image_url: string | null = null;
-    if (file instanceof File && file.size > 0) {
+    const directUrl = form.get("image_url_direct");
+    let image_url: string | null = directUrl ? String(directUrl) : null;
+    
+    if (!image_url && file instanceof File && file.size > 0) {
       image_url = await processCarImage(file);
     }
 
