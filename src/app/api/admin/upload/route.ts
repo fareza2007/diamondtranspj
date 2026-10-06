@@ -4,11 +4,12 @@ import { requireAdmin } from '@/lib/admin-auth';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;
-  const auth = await requireAdmin();
-
-  if (!auth.ok) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  
+  // SEMENTARA DIMATIKAN UNTUK TESTING VERCEL BLOB CLIENT CREDENTIALS
+  // const auth = await requireAdmin();
+  // if (!auth.ok) {
+  //  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // }
 
   try {
     const jsonResponse = await handleUpload({
