@@ -19,7 +19,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Izinkan hanya upload gambar
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-          tokenPayload: JSON.stringify({ admin: auth.session.username }),
+          tokenPayload: JSON.stringify({ admin: "admin-sementara" }),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
