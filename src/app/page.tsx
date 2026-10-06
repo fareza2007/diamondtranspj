@@ -156,16 +156,16 @@ export default async function Home() {
         <section className="py-16 bg-background">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
-              <p className="text-gold text-sm font-semibold mb-2 tracking-[0.2em] uppercase">Event GP</p>
-              <h2 className="text-3xl font-bold text-white mb-3">Periode Event MotoGP</h2>
+              <p className="text-gold text-sm font-semibold mb-2 tracking-[0.2em] uppercase">Informasi Event</p>
+              <h2 className="text-3xl font-bold text-white mb-3">Event yang Sedang Berlangsung</h2>
               <p className="text-white/70 max-w-2xl mx-auto">
-                Saat tanggal sewa bertepatan dengan event di bawah, harga khusus GP berlaku otomatis.
+                Saat tanggal sewa bertepatan dengan event di bawah, harga khusus event berlaku otomatis.
               </p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {gpEvents.map((event) => (
                 <div key={event.id} className="bg-[#0a0a0a] rounded-2xl p-5 border border-gold/20">
-                  <p className="text-gold text-xs font-semibold uppercase tracking-wider mb-2">MotoGP</p>
+                  <p className="text-gold text-xs font-semibold uppercase tracking-wider mb-2">Event Aktif</p>
                   <h3 className="text-lg font-bold text-white">{event.name}</h3>
                   <p className="text-sm text-white/80 mt-2">{formatEventRange(event.start_date, event.end_date)}</p>
                   {event.location && <p className="text-xs text-white/50 mt-1">{event.location}</p>}

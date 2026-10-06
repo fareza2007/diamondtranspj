@@ -14,7 +14,7 @@ export default function Footer() {
     "Bandara Internasional Lombok (BIL)",
     "Mataram City",
     "Senggigi",
-    "Mandalika (Sirkuit MotoGP)",
+    "Sirkuit Mandalika",
     "Gili Trawangan (Pelabuhan Bangsal)",
     "Kuta Lombok",
   ];

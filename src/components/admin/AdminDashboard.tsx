@@ -199,7 +199,7 @@ export default function AdminDashboard({
         setMessage(data.error || "Gagal menyimpan event.");
         return;
       }
-      setMessage(editingEventId ? "Event GP diperbarui." : "Event GP ditambahkan.");
+      setMessage(editingEventId ? "Event diperbarui." : "Event berhasil ditambahkan.");
       setEditingEventId(null);
       setEventForm({ name: "", start_date: "", end_date: "", location: "", description: "", is_active: true });
       router.refresh();
@@ -281,7 +281,7 @@ export default function AdminDashboard({
             onClick={() => setTab("event")}
             className={`px-4 py-2 rounded-lg text-sm font-semibold ${tab === "event" ? "bg-gold text-white" : "bg-white/5 text-white/70"}`}
           >
-            Event GP ({activeEvents.length})
+            Event Aktif ({activeEvents.length})
           </button>
         </div>
 
@@ -320,10 +320,10 @@ export default function AdminDashboard({
                   <input className={inputClass} type="number" min={0} placeholder="Lepas kunci" value={carForm.price_lepas_kunci} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci: e.target.value })} />
                   <input className={inputClass} type="number" min={0} placeholder="Dengan sopir" value={carForm.price_dengan_sopir} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir: e.target.value })} />
                 </div>
-                <p className="text-xs text-white/50 pt-1">Harga event GP (kosongkan jika tidak tersedia)</p>
+                <p className="text-xs text-white/50 pt-1">Harga event khusus (kosongkan jika tidak tersedia)</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <input className={inputClass} type="number" min={0} placeholder="Lepas kunci GP" value={carForm.price_lepas_kunci_gp} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci_gp: e.target.value })} />
-                  <input className={inputClass} type="number" min={0} placeholder="Dengan sopir GP" value={carForm.price_dengan_sopir_gp} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir_gp: e.target.value })} />
+                  <input className={inputClass} type="number" min={0} placeholder="Lepas kunci Event" value={carForm.price_lepas_kunci_gp} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci_gp: e.target.value })} />
+                  <input className={inputClass} type="number" min={0} placeholder="Dengan sopir Event" value={carForm.price_dengan_sopir_gp} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir_gp: e.target.value })} />
                 </div>
                 <label className="flex items-center gap-2 text-sm text-white/80">
                   <input type="checkbox" checked={carForm.with_keyless_available} onChange={(e) => setCarForm({ ...carForm, with_keyless_available: e.target.checked })} />
@@ -381,7 +381,7 @@ export default function AdminDashboard({
                       </span>
                     </div>
                     <p className="text-xs text-white/70 mt-2">
-                      Hari biasa: {money(car.price_lepas_kunci)} / {money(car.price_dengan_sopir)} · GP: {money(car.price_lepas_kunci_gp)} / {money(car.price_dengan_sopir_gp)}
+                      Hari biasa: {money(car.price_lepas_kunci)} / {money(car.price_dengan_sopir)} · Event: {money(car.price_lepas_kunci_gp)} / {money(car.price_dengan_sopir_gp)}
                     </p>
                     <div className="flex gap-2 mt-3">
                       <button onClick={() => openEditCar(car)} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg">Edit</button>
@@ -397,9 +397,9 @@ export default function AdminDashboard({
         {tab === "event" && (
           <div className="grid lg:grid-cols-5 gap-6">
             <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-5">
-              <h2 className="font-bold text-white mb-4">{editingEventId ? "Edit Event GP" : "Tambah Event GP"}</h2>
+              <h2 className="font-bold text-white mb-4">{editingEventId ? "Edit Event" : "Tambah Event"}</h2>
               <form onSubmit={submitEvent} className="space-y-3">
-                <input className={inputClass} placeholder="Nama event, cth: MotoGP Mandalika 2027" value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} required />
+                <input className={inputClass} placeholder="Nama event, cth: Konser Mandalika 2026" value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} required />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-white/60 mb-1">Mulai</label>
@@ -437,7 +437,7 @@ export default function AdminDashboard({
             </div>
 
             <div className="lg:col-span-3 space-y-3">
-              {events.length === 0 && <p className="text-white/60">Belum ada event GP. Tambahkan periode MotoGP agar harga khusus muncul di form pemesanan.</p>}
+              {events.length === 0 && <p className="text-white/60">Belum ada event aktif. Tambahkan periode event agar harga khusus muncul di form pemesanan.</p>}
               {events.map((event) => (
                 <div key={event.id} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-4">
                   <div className="flex justify-between gap-3">
