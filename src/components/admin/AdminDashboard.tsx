@@ -312,18 +312,38 @@ export default function AdminDashboard({
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <input className={inputClass} type="number" min={2} placeholder="Kursi" value={carForm.seats} onChange={(e) => setCarForm({ ...carForm, seats: e.target.value })} />
-                  <input className={inputClass} type="number" min={1} placeholder="Jam sopir / hari" value={carForm.driver_duration_hours} onChange={(e) => setCarForm({ ...carForm, driver_duration_hours: e.target.value })} />
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Jumlah Kursi</label>
+                    <input className={inputClass} type="number" min={2} placeholder="Cth: 7" value={carForm.seats} onChange={(e) => setCarForm({ ...carForm, seats: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Durasi Sopir (Jam/Hari)</label>
+                    <input className={inputClass} type="number" min={1} placeholder="Cth: 12" value={carForm.driver_duration_hours} onChange={(e) => setCarForm({ ...carForm, driver_duration_hours: e.target.value })} />
+                  </div>
                 </div>
-                <p className="text-xs text-white/50 pt-1">Harga hari biasa</p>
+                
+                <p className="text-sm font-semibold text-white/80 pt-2 border-t border-white/10 mt-2">Harga Hari Biasa</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <input className={inputClass} type="number" min={0} placeholder="Lepas kunci" value={carForm.price_lepas_kunci} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci: e.target.value })} />
-                  <input className={inputClass} type="number" min={0} placeholder="Dengan sopir" value={carForm.price_dengan_sopir} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir: e.target.value })} />
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Lepas Kunci</label>
+                    <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_lepas_kunci} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Dengan Sopir</label>
+                    <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_dengan_sopir} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir: e.target.value })} />
+                  </div>
                 </div>
-                <p className="text-xs text-white/50 pt-1">Harga event khusus (kosongkan jika tidak tersedia)</p>
+                
+                <p className="text-sm font-semibold text-white/80 pt-2 border-t border-white/10 mt-2">Harga Event Khusus <span className="text-xs font-normal text-white/40">(Kosongkan jika sama)</span></p>
                 <div className="grid grid-cols-2 gap-3">
-                  <input className={inputClass} type="number" min={0} placeholder="Lepas kunci Event" value={carForm.price_lepas_kunci_gp} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci_gp: e.target.value })} />
-                  <input className={inputClass} type="number" min={0} placeholder="Dengan sopir Event" value={carForm.price_dengan_sopir_gp} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir_gp: e.target.value })} />
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Lepas Kunci (Event)</label>
+                    <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_lepas_kunci_gp} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci_gp: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Dengan Sopir (Event)</label>
+                    <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_dengan_sopir_gp} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir_gp: e.target.value })} />
+                  </div>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-white/80">
                   <input type="checkbox" checked={carForm.with_keyless_available} onChange={(e) => setCarForm({ ...carForm, with_keyless_available: e.target.checked })} />
