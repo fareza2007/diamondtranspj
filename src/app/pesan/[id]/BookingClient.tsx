@@ -131,25 +131,25 @@ export default function BookingClient({ car, events = [] }: { car: any; events?:
 
     const message = `Halo Diamond Trans! Saya ingin menyewa mobil:
 
-🚗 *DETAIL MOBIL*
+*DETAIL MOBIL*
 - Mobil: ${car.name} (${car.brand})
 - Tipe: ${formData.type === 'lepas_kunci' ? 'Lepas Kunci' : 'Dengan Sopir'}${durationNote}
 - Event Khusus: ${isGpEvent ? `Ya${matchedEvent ? ` (${matchedEvent.name})` : ''}` : 'Tidak'}
 
-👤 *DATA PENYEWA*
+*DATA PENYEWA*
 - Nama: ${formData.name}
 - No. HP: ${formData.phone}
 
-📅 *JADWAL & LOKASI*
+*JADWAL & LOKASI*
 - Tanggal Mulai: ${formData.startDate}
 - Tanggal Selesai: ${formData.endDate} (${days} Hari)
 - Lokasi Jemput: ${formData.pickup}
 - Lokasi Kembali: ${formData.dropoff || formData.pickup}
 
-💰 *ESTIMASI TOTAL*
+*ESTIMASI TOTAL*
 Rp ${totalPrice.toLocaleString('id-ID')}
 
-Apakah unit ini tersedia? Terima kasih 🙏`;
+Apakah unit ini tersedia? Terima kasih.`;
 
     window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(message)}`, '_blank');
   };

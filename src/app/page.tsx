@@ -157,7 +157,7 @@ export default async function Home() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {packages.map((pkg) => {
-                const waMessage = `Halo Diamond Trans! Saya tertarik untuk memesan:\n\n🌴 *${pkg.name}*\n⏱️ Durasi: ${pkg.duration}\n💰 Harga: Rp ${Number(pkg.price).toLocaleString('id-ID')}\n\nApakah paket ini masih tersedia untuk jadwal saya? Terima kasih.`;
+                const waMessage = `Halo Diamond Trans! Saya tertarik untuk memesan:\n\n*${pkg.name}*\nDurasi: ${pkg.duration}\nHarga: Rp ${Number(pkg.price).toLocaleString('id-ID')}\n\nApakah paket ini masih tersedia untuk jadwal saya? Terima kasih.`;
                 const waLink = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMessage)}`;
 
                 return (
@@ -201,35 +201,44 @@ export default async function Home() {
                           <p className="text-xs text-white/60 mt-1">{pkg.tagline}</p>
                         </div>
 
-                        {/* 3 Pillars: Mobil, Hotel, Travel */}
-                        <div className="space-y-2.5 pt-2 border-t border-white/10 text-xs">
-                          <div className="flex items-start gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0 mt-0.5">
-                              🚗
-                            </span>
+                        {/* 3 Pillars: Mobil, Hotel, Travel (SVG Silhouette Icons) */}
+                        <div className="space-y-3 pt-2 border-t border-white/10 text-xs">
+                          {/* Mobil / Armada */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gold/15 text-gold flex items-center justify-center shrink-0">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9h18M5 14h14M4 14l1.5-6h13L20 14" />
+                              </svg>
+                            </div>
                             <div>
                               <p className="font-semibold text-white">Armada & Transport</p>
-                              <p className="text-white/60">{pkg.car_details}</p>
+                              <p className="text-white/60 leading-relaxed mt-0.5">{pkg.car_details}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0 mt-0.5">
-                              🏨
-                            </span>
+                          {/* Hotel / Akomodasi */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gold/15 text-gold flex items-center justify-center shrink-0">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                            </div>
                             <div>
                               <p className="font-semibold text-white">Akomodasi Hotel</p>
-                              <p className="text-white/60">{pkg.hotel_details}</p>
+                              <p className="text-white/60 leading-relaxed mt-0.5">{pkg.hotel_details}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-start gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0 mt-0.5">
-                              🧭
-                            </span>
+                          {/* Tour / Rute Wisata */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-full bg-gold/15 text-gold flex items-center justify-center shrink-0">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                              </svg>
+                            </div>
                             <div>
                               <p className="font-semibold text-white">Rute Wisata & Tour</p>
-                              <p className="text-white/60">{pkg.travel_details}</p>
+                              <p className="text-white/60 leading-relaxed mt-0.5">{pkg.travel_details}</p>
                             </div>
                           </div>
                         </div>
@@ -238,10 +247,15 @@ export default async function Home() {
                         {pkg.highlights && pkg.highlights.length > 0 && (
                           <div className="pt-2 border-t border-white/5">
                             <p className="text-[11px] font-semibold text-gold/90 uppercase tracking-wider mb-1.5">Fasilitas Termasuk:</p>
-                            <ul className="grid grid-cols-1 gap-1 text-[11px] text-white/70">
+                            <ul className="grid grid-cols-1 gap-1.5 text-[11px] text-white/70">
                               {pkg.highlights.map((h, i) => (
-                                <li key={i} className="flex items-center gap-1.5">
-                                  <span className="text-gold">✓</span> {h}
+                                <li key={i} className="flex items-center gap-2">
+                                  <span className="w-3.5 h-3.5 rounded-full bg-gold/20 text-gold flex items-center justify-center shrink-0">
+                                    <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </span>
+                                  {h}
                                 </li>
                               ))}
                             </ul>
@@ -308,7 +322,12 @@ export default async function Home() {
                   </div>
                   <p className="text-sm text-white/60 mb-1 capitalize">{car.transmission} • {car.seats} Kursi</p>
                   {car.with_keyless_available && car.with_driver_available && (
-                    <p className="text-xs text-gold/80">✓ Lepas Kunci & Dengan Sopir</p>
+                    <p className="text-xs text-gold/90 flex items-center gap-1.5 font-medium">
+                      <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Lepas Kunci &amp; Dengan Sopir</span>
+                    </p>
                   )}
                   {!car.with_keyless_available && (
                     <p className="text-xs text-white/50">Wajib Dengan Sopir</p>

@@ -51,7 +51,12 @@ export default async function ArmadaPage() {
                 </div>
                 <p className="text-sm text-white/60 mb-1 capitalize">{car.transmission} • {car.seats} Kursi</p>
                 {car.with_keyless_available && car.with_driver_available && (
-                  <p className="text-xs text-gold/80 mb-3">✓ Lepas Kunci &amp; Dengan Sopir</p>
+                  <p className="text-xs text-gold/90 mb-3 flex items-center gap-1.5 font-medium">
+                    <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Lepas Kunci &amp; Dengan Sopir</span>
+                  </p>
                 )}
                 {!car.with_keyless_available && (
                   <p className="text-xs text-white/40 mb-3">Wajib Dengan Sopir</p>

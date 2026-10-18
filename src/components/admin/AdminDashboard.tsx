@@ -202,9 +202,12 @@ function ImageUploadZone({
         <button
           type="button"
           onClick={() => setShowUrl(!showUrl)}
-          className="text-[11px] text-white/40 hover:text-gold transition-colors"
+          className="text-[11px] text-white/50 hover:text-gold transition-colors inline-flex items-center gap-1.5"
         >
-          {showUrl ? "▲ Sembunyikan input URL" : "🔗 Atau masukkan link URL gambar langsung"}
+          <svg className="w-3 h-3 text-gold/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          <span>{showUrl ? "Sembunyikan input URL" : "Atau masukkan link URL gambar langsung"}</span>
         </button>
         {showUrl && (
           <input
@@ -549,22 +552,28 @@ export default function AdminDashboard({
               setTab("armada");
               setEditingCarId(null);
             }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
               tab === "armada" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
             }`}
           >
-            🚗 Armada ({cars.length})
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9h18M5 14h14M4 14l1.5-6h13L20 14" />
+            </svg>
+            Armada ({cars.length})
           </button>
           <button
             onClick={() => {
               setTab("paket");
               setEditingPkgId(null);
             }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
               tab === "paket" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
             }`}
           >
-            🌴 Paket Wisata ({packages.length})
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            Paket Wisata ({packages.length})
           </button>
           <button
             onClick={() => {
@@ -572,11 +581,14 @@ export default function AdminDashboard({
               setIsAddingEvent(false);
               setEditingEventId(null);
             }}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
               tab === "event" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
             }`}
           >
-            📅 Event Khusus ({activeEvents.length})
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Event Khusus ({activeEvents.length})
           </button>
         </div>
 
@@ -584,8 +596,10 @@ export default function AdminDashboard({
         {message && (
           <div className="mb-6 bg-gold/10 border border-gold/40 text-white text-sm px-4 py-3 rounded-xl flex items-center justify-between">
             <span>{message}</span>
-            <button onClick={() => setMessage("")} className="text-white/50 hover:text-white text-xs ml-4">
-              ✕
+            <button onClick={() => setMessage("")} className="text-white/50 hover:text-white p-1 rounded-md transition-colors ml-4">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         )}
@@ -620,9 +634,12 @@ export default function AdminDashboard({
                   </h3>
                   <button
                     onClick={resetCarForm}
-                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                   >
-                    ✕ Tutup Form
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tutup Form</span>
                   </button>
                 </div>
 
@@ -777,9 +794,12 @@ export default function AdminDashboard({
                   <div className="flex gap-2 pt-3 border-t border-white/10 mt-2">
                     <button
                       onClick={() => openEditCar(car)}
-                      className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-semibold py-2 rounded-lg transition-colors text-center"
+                      className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
-                      ✏️ Edit
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
                     </button>
                     <button
                       onClick={() => deleteCar(car)}
@@ -824,9 +844,12 @@ export default function AdminDashboard({
                   </h3>
                   <button
                     onClick={resetPkgForm}
-                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                   >
-                    ✕ Tutup Form
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tutup Form</span>
                   </button>
                 </div>
 
@@ -860,15 +883,30 @@ export default function AdminDashboard({
                   <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3">
                     <p className="text-xs font-bold text-gold uppercase tracking-wider">3 Komponen Utama Paket</p>
                     <div>
-                      <label className="block text-xs text-white/70 mb-1">🚗 Transport & Mobil</label>
+                      <label className="block text-xs text-white/70 mb-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9h18M5 14h14M4 14l1.5-6h13L20 14" />
+                        </svg>
+                        Transport & Mobil
+                      </label>
                       <input className={inputClass} placeholder="Cth: Toyota All New Avanza / Veloz (Termasuk Sopir & BBM)" value={pkgForm.car_details} onChange={(e) => setPkgForm({ ...pkgForm, car_details: e.target.value })} required />
                     </div>
                     <div>
-                      <label className="block text-xs text-white/70 mb-1">🏨 Penginapan & Hotel</label>
+                      <label className="block text-xs text-white/70 mb-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Penginapan & Hotel
+                      </label>
                       <input className={inputClass} placeholder="Cth: Hotel Bintang 4 di Mandalika (2 Malam + Sarapan Pagi)" value={pkgForm.hotel_details} onChange={(e) => setPkgForm({ ...pkgForm, hotel_details: e.target.value })} required />
                     </div>
                     <div>
-                      <label className="block text-xs text-white/70 mb-1">🧭 Rute & Wisata</label>
+                      <label className="block text-xs text-white/70 mb-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Rute & Wisata
+                      </label>
                       <textarea rows={2} className={inputClass} placeholder="Cth: Sirkuit Mandalika, Pantai Kuta, Tanjung Aan, Bukit Merese, Desa Sade" value={pkgForm.travel_details} onChange={(e) => setPkgForm({ ...pkgForm, travel_details: e.target.value })} required />
                     </div>
                   </div>
@@ -946,18 +984,36 @@ export default function AdminDashboard({
                     <p className="text-xs text-white/60 mb-3 line-clamp-2">{pkg.tagline}</p>
 
                     <div className="text-[11px] space-y-1.5 py-2.5 border-t border-white/10 text-white/70">
-                      <p className="line-clamp-1">🚗 {pkg.car_details}</p>
-                      <p className="line-clamp-1">🏨 {pkg.hotel_details}</p>
-                      <p className="line-clamp-1">🧭 {pkg.travel_details}</p>
+                      <p className="line-clamp-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9h18M5 14h14M4 14l1.5-6h13L20 14" />
+                        </svg>
+                        {pkg.car_details}
+                      </p>
+                      <p className="line-clamp-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {pkg.hotel_details}
+                      </p>
+                      <p className="line-clamp-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        {pkg.travel_details}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex gap-2 pt-3 border-t border-white/10 mt-2">
                     <button
                       onClick={() => openEditPkg(pkg)}
-                      className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-semibold py-2 rounded-lg transition-colors text-center"
+                      className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
-                      ✏️ Edit
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
                     </button>
                     <button
                       onClick={() => deletePackage(pkg)}
@@ -1009,9 +1065,12 @@ export default function AdminDashboard({
                       setIsAddingEvent(false);
                       setEditingEventId(null);
                     }}
-                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                   >
-                    ✕ Tutup Form
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tutup Form</span>
                   </button>
                 </div>
 
@@ -1086,10 +1145,21 @@ export default function AdminDashboard({
                       </span>
                     </div>
 
-                    <p className="text-xs text-gold font-medium mb-1">
-                      📅 {formatEventRange(event.start_date, event.end_date)}
+                    <p className="text-xs text-gold font-medium mb-1.5 flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {formatEventRange(event.start_date, event.end_date)}
                     </p>
-                    {event.location && <p className="text-xs text-white/60 mb-2">📍 {event.location}</p>}
+                    {event.location && (
+                      <p className="text-xs text-white/60 mb-2 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-white/40 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {event.location}
+                      </p>
+                    )}
                     {event.description && <p className="text-xs text-white/40 line-clamp-2">{event.description}</p>}
                   </div>
 
@@ -1107,9 +1177,12 @@ export default function AdminDashboard({
                           is_active: event.is_active,
                         });
                       }}
-                      className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-semibold py-2 rounded-lg transition-colors text-center"
+                      className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
-                      ✏️ Edit
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
                     </button>
                     <button
                       onClick={() => deleteEvent(event)}
