@@ -1,17 +1,4 @@
-import { db } from "./firebase";
-import {
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-} from "firebase/firestore";
+import { adminDb } from "./firebase-admin";
 
 export interface Car {
   id: string;
@@ -80,16 +67,15 @@ export interface Booking {
 // ========================
 export async function getCars(onlyAvailable = false, limitCount?: number): Promise<Car[]> {
   try {
-    const carsCol = collection(db, "cars");
-    const q = onlyAvailable
-      ? query(carsCol, where("status", "==", "available"))
-      : carsCol;
-    const snap = await getDocs(q);
+    let q = adminDb.collection("cars") as any;
+    if (onlyAvailable) {
+      q = q.where("status", "==", "available");
+    }
+    const snap = await q.get();
     const cars: Car[] = [];
-    snap.forEach((d) => {
+    snap.forEach((d: any) => {
       cars.push({ id: d.id, ...d.data() } as Car);
     });
-    // Urutkan berdasarkan harga termurah
     cars.sort((a, b) => (a.price_per_day || 0) - (b.price_per_day || 0));
     if (limitCount && limitCount > 0) {
       return cars.slice(0, limitCount);
@@ -103,9 +89,9 @@ export async function getCars(onlyAvailable = false, limitCount?: number): Promi
 
 export async function getCarById(id: string): Promise<Car | null> {
   try {
-    const docRef = doc(db, "cars", id);
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) return null;
+    const docRef = adminDb.collection("cars").doc(id);
+    const snap = await docRef.get();
+    if (!snap.exists) return null;
     return { id: snap.id, ...snap.data() } as Car;
   } catch (error) {
     console.error(`Error fetching car ${id}:`, error);
@@ -114,8 +100,7 @@ export async function getCarById(id: string): Promise<Car | null> {
 }
 
 export async function addCar(data: Omit<Car, "id">): Promise<string> {
-  const carsCol = collection(db, "cars");
-  const res = await addDoc(carsCol, {
+  const res = await adminDb.collection("cars").add({
     ...data,
     created_at: new Date().toISOString(),
   });
@@ -123,13 +108,11 @@ export async function addCar(data: Omit<Car, "id">): Promise<string> {
 }
 
 export async function updateCar(id: string, data: Partial<Car>): Promise<void> {
-  const docRef = doc(db, "cars", id);
-  await updateDoc(docRef, { ...data });
+  await adminDb.collection("cars").doc(id).update({ ...data });
 }
 
 export async function deleteCar(id: string): Promise<void> {
-  const docRef = doc(db, "cars", id);
-  await deleteDoc(docRef);
+  await adminDb.collection("cars").doc(id).delete();
 }
 
 // ========================
@@ -137,15 +120,17 @@ export async function deleteCar(id: string): Promise<void> {
 // ========================
 export async function getEvents(onlyActive = false): Promise<GpEvent[]> {
   try {
-    const eventsCol = collection(db, "gp_events");
-    const snap = await getDocs(eventsCol);
+    let q = adminDb.collection("gp_events") as any;
+    if (onlyActive) {
+      q = q.where("is_active", "==", true);
+    }
+    const snap = await q.get();
     const events: GpEvent[] = [];
-    snap.forEach((d) => {
+    snap.forEach((d: any) => {
       events.push({ id: d.id, ...d.data() } as GpEvent);
     });
-    const filtered = onlyActive ? events.filter((e) => e.is_active) : events;
-    filtered.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
-    return filtered;
+    events.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    return events;
   } catch (error) {
     console.error("Error fetching events:", error);
     return [];
@@ -153,8 +138,7 @@ export async function getEvents(onlyActive = false): Promise<GpEvent[]> {
 }
 
 export async function addEvent(data: Omit<GpEvent, "id">): Promise<string> {
-  const eventsCol = collection(db, "gp_events");
-  const res = await addDoc(eventsCol, {
+  const res = await adminDb.collection("gp_events").add({
     ...data,
     created_at: new Date().toISOString(),
   });
@@ -162,13 +146,11 @@ export async function addEvent(data: Omit<GpEvent, "id">): Promise<string> {
 }
 
 export async function updateEvent(id: string, data: Partial<GpEvent>): Promise<void> {
-  const docRef = doc(db, "gp_events", id);
-  await updateDoc(docRef, { ...data });
+  await adminDb.collection("gp_events").doc(id).update({ ...data });
 }
 
 export async function deleteEvent(id: string): Promise<void> {
-  const docRef = doc(db, "gp_events", id);
-  await deleteDoc(docRef);
+  await adminDb.collection("gp_events").doc(id).delete();
 }
 
 // ========================
@@ -176,15 +158,17 @@ export async function deleteEvent(id: string): Promise<void> {
 // ========================
 export async function getPackages(onlyActive = false): Promise<TourPackage[]> {
   try {
-    const pkgCol = collection(db, "packages");
-    const snap = await getDocs(pkgCol);
+    let q = adminDb.collection("packages") as any;
+    if (onlyActive) {
+      q = q.where("is_active", "==", true);
+    }
+    const snap = await q.get();
     const pkgs: TourPackage[] = [];
-    snap.forEach((d) => {
+    snap.forEach((d: any) => {
       pkgs.push({ id: d.id, ...d.data() } as TourPackage);
     });
-    const filtered = onlyActive ? pkgs.filter((p) => p.is_active) : pkgs;
-    filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
-    return filtered;
+    pkgs.sort((a, b) => (a.price || 0) - (b.price || 0));
+    return pkgs;
   } catch (error) {
     console.error("Error fetching packages:", error);
     return [];
@@ -193,9 +177,9 @@ export async function getPackages(onlyActive = false): Promise<TourPackage[]> {
 
 export async function getPackageById(id: string): Promise<TourPackage | null> {
   try {
-    const docRef = doc(db, "packages", id);
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) return null;
+    const docRef = adminDb.collection("packages").doc(id);
+    const snap = await docRef.get();
+    if (!snap.exists) return null;
     return { id: snap.id, ...snap.data() } as TourPackage;
   } catch (error) {
     console.error(`Error fetching package ${id}:`, error);
@@ -204,8 +188,7 @@ export async function getPackageById(id: string): Promise<TourPackage | null> {
 }
 
 export async function addPackage(data: Omit<TourPackage, "id">): Promise<string> {
-  const pkgCol = collection(db, "packages");
-  const res = await addDoc(pkgCol, {
+  const res = await adminDb.collection("packages").add({
     ...data,
     created_at: new Date().toISOString(),
   });
@@ -213,21 +196,18 @@ export async function addPackage(data: Omit<TourPackage, "id">): Promise<string>
 }
 
 export async function updatePackage(id: string, data: Partial<TourPackage>): Promise<void> {
-  const docRef = doc(db, "packages", id);
-  await updateDoc(docRef, { ...data });
+  await adminDb.collection("packages").doc(id).update({ ...data });
 }
 
 export async function deletePackage(id: string): Promise<void> {
-  const docRef = doc(db, "packages", id);
-  await deleteDoc(docRef);
+  await adminDb.collection("packages").doc(id).delete();
 }
 
 // ========================
 // BOOKINGS
 // ========================
 export async function addBooking(data: Booking): Promise<string> {
-  const bookingCol = collection(db, "bookings");
-  const res = await addDoc(bookingCol, {
+  const res = await adminDb.collection("bookings").add({
     ...data,
     status: data.status || "pending",
     created_at: new Date().toISOString(),
