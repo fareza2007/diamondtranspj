@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { getCarById, getEvents } from "@/lib/db";
 import { notFound } from "next/navigation";
 import BookingClient from "./BookingClient";
 import type { PublicGpEvent } from "@/lib/gp";
@@ -12,25 +12,17 @@ export const dynamic = "force-dynamic";
 export default async function PesanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  let car = null;
-  let events: PublicGpEvent[] = [];
-  
-  try {
-    car = await prisma.car.findUnique({
-      where: { id: parseInt(id) }
-    });
-  } catch (error) {
-    console.error("DB error:", error);
-  }
-  try {
-    const gpEvents = await prisma.gpEvent.findMany({
-      where: { is_active: true },
-      orderBy: { start_date: "asc" },
-    });
-    events = JSON.parse(JSON.stringify(gpEvents));
-  } catch {
-    events = [];
-  }
+  const car = await getCarById(id);
+  const gpEvents = await getEvents(true);
+  const events: PublicGpEvent[] = gpEvents.map(e => ({
+    id: e.id as any,
+    name: e.name,
+    start_date: e.start_date,
+    end_date: e.end_date,
+    location: e.location || null,
+    description: e.description || null,
+    is_active: e.is_active,
+  }));
 
   if (!car) {
     notFound();

@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { getCars } from "@/lib/db";
 import Link from "next/link";
 
 export const metadata = {
@@ -9,16 +9,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ArmadaPage() {
-  // Fetch cars from database
-  let cars: any[] = [];
-  try {
-    cars = await prisma.car.findMany({
-      where: { status: "available" },
-      orderBy: { price_per_day: 'asc' }
-    });
-  } catch (error) {
-    console.error("Failed to fetch cars:", error);
-  }
+  const cars = await getCars(true);
 
   return (
     <div className="bg-background min-h-screen py-12">

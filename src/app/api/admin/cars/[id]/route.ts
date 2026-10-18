@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { parseOptionalNumber, parseRequiredNumber, processCarImage, startingPrice } from "@/lib/image";
+import { updateCar, deleteCar, getCarById } from "@/lib/db";
 
 function revalidatePublic() {
   revalidatePath("/");
@@ -19,8 +19,7 @@ export async function PATCH(
 
   try {
     const { id } = await params;
-    const carId = parseInt(id, 10);
-    if (!Number.isFinite(carId)) {
+    if (!id) {
       return NextResponse.json({ error: "ID tidak valid." }, { status: 400 });
     }
 
@@ -37,7 +36,7 @@ export async function PATCH(
     const price_dengan_sopir_gp = parseOptionalNumber(form.get("price_dengan_sopir_gp"));
 
     const file = form.get("image");
-    const directUrl = form.get("image_url_direct");
+    const directUrl = form.get("image_url_direct") || form.get("image_url");
     let image_url: string | undefined;
 
     if (directUrl) {
@@ -46,33 +45,36 @@ export async function PATCH(
       image_url = await processCarImage(file);
     }
 
-    const car = await prisma.car.update({
-      where: { id: carId },
-      data: {
-        name,
-        brand,
-        transmission: String(form.get("transmission") || "matic").trim(),
-        seats: parseRequiredNumber(form.get("seats"), 7),
+    const updateData: any = {
+      name,
+      brand,
+      transmission: String(form.get("transmission") || "matic").trim(),
+      seats: parseRequiredNumber(form.get("seats"), 7),
+      price_lepas_kunci,
+      price_dengan_sopir,
+      price_lepas_kunci_gp,
+      price_dengan_sopir_gp,
+      driver_duration_hours: parseRequiredNumber(form.get("driver_duration_hours"), 12),
+      with_driver_available: form.get("with_driver_available") === "true",
+      with_keyless_available: form.get("with_keyless_available") === "true",
+      status: String(form.get("status") || "available"),
+      price_per_day: startingPrice({
         price_lepas_kunci,
         price_dengan_sopir,
         price_lepas_kunci_gp,
         price_dengan_sopir_gp,
-        driver_duration_hours: parseRequiredNumber(form.get("driver_duration_hours"), 12),
-        with_driver_available: form.get("with_driver_available") === "true",
-        with_keyless_available: form.get("with_keyless_available") === "true",
-        status: String(form.get("status") || "available"),
-        price_per_day: startingPrice({
-          price_lepas_kunci,
-          price_dengan_sopir,
-          price_lepas_kunci_gp,
-          price_dengan_sopir_gp,
-        }),
-        ...(image_url ? { image_url } : {}),
-      },
-    });
+      }),
+    };
+
+    if (image_url) {
+      updateData.image_url = image_url;
+    }
+
+    await updateCar(id, updateData);
 
     revalidatePublic();
-    return NextResponse.json({ success: true, car });
+    const updated = await getCarById(id);
+    return NextResponse.json({ success: true, car: updated });
   } catch (error) {
     console.error("Update car error:", error);
     const message = error instanceof Error ? error.message : "Gagal memperbarui armada.";
@@ -89,8 +91,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    const carId = parseInt(id, 10);
-    await prisma.car.delete({ where: { id: carId } });
+    await deleteCar(id);
     revalidatePublic();
     return NextResponse.json({ success: true });
   } catch (error) {

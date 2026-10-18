@@ -1,60 +1,24 @@
 import Link from "next/link";
 import Image from "next/image";
-import prisma from "@/lib/prisma";
 import HeroSearch from "@/components/ui/HeroSearch";
 import { formatEventRange } from "@/lib/gp";
+import { getCars, getEvents, getPackages } from "@/lib/db";
 
 export const metadata = {
   title: "Beranda - Diamond Trans Rental Mobil Lombok & Bali",
-  description: "Platform rental mobil terpercaya di Lombok dan Bali. Armada lengkap, harga transparan, konfirmasi instan via WhatsApp.",
+  description: "Platform rental mobil terpercaya di Lombok dan Bali. Armada lengkap, paket tour hotel + travel, harga transparan, konfirmasi instan via WhatsApp.",
 };
 
 export const dynamic = "force-dynamic";
 
-const reviews = [
-  {
-    name: "Rizal A.",
-    rating: 5,
-    comment: "Pelayanan sangat memuaskan! Mobil bersih dan sopir sangat ramah. Akan booking lagi saat ke Lombok.",
-    date: "Agustus 2024",
-    location: "Jakarta",
-  },
-  {
-    name: "Sarah M.",
-    rating: 5,
-    comment: "Proses booking via WA sangat cepat dan responsif. Harga sesuai dan tidak ada biaya tersembunyi.",
-    date: "September 2024",
-    location: "Surabaya",
-  },
-  {
-    name: "David K.",
-    rating: 5,
-    comment: "Sewa Alphard untuk acara pernikahan. Tepat waktu dan kondisi mobil sangat prima. Highly recommended!",
-    date: "Oktober 2024",
-    location: "Denpasar",
-  },
-];
-
 export default async function Home() {
-  let cars: any[] = [];
-  let gpEvents: any[] = [];
-  try {
-    cars = await prisma.car.findMany({
-      where: { status: "available" },
-      orderBy: { price_per_day: 'asc' },
-      take: 3,
-    });
-  } catch (e) {
-    // DB not connected, use empty
-  }
-  try {
-    gpEvents = await prisma.gpEvent.findMany({
-      where: { is_active: true },
-      orderBy: { start_date: "asc" },
-    });
-  } catch {
-    gpEvents = [];
-  }
+  const [cars, gpEvents, packages] = await Promise.all([
+    getCars(true, 3),
+    getEvents(true),
+    getPackages(true),
+  ]);
+
+  const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || "6283129442611";
 
   return (
     <div className="flex flex-col">
@@ -177,6 +141,140 @@ export default async function Home() {
         </section>
       )}
 
+      {/* Paket Wisata: Mobil + Hotel + Travel */}
+      {packages.length > 0 && (
+        <section className="py-20 bg-[#070707] border-y border-white/5 relative">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <p className="text-gold text-sm font-semibold mb-2 tracking-[0.2em] uppercase">All-in-One Experience</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
+                Paket Liburan <span className="text-gold">Mobil + Hotel + Travel</span>
+              </h2>
+              <p className="text-white/70 max-w-2xl mx-auto text-sm md:text-base">
+                Nikmati liburan tanpa pusing mengatur transportasi, penginapan, dan rute wisata. Semua sudah kami siapkan dengan standar terbaik Diamond Trans.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {packages.map((pkg) => {
+                const waMessage = `Halo Diamond Trans! Saya tertarik untuk memesan:\n\n🌴 *${pkg.name}*\n⏱️ Durasi: ${pkg.duration}\n💰 Harga: Rp ${Number(pkg.price).toLocaleString('id-ID')}\n\nApakah paket ini masih tersedia untuk jadwal saya? Terima kasih.`;
+                const waLink = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMessage)}`;
+
+                return (
+                  <div
+                    key={pkg.id}
+                    className="bg-[#0c0c0c] rounded-2xl overflow-hidden border border-white/10 hover:border-gold/40 shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group"
+                  >
+                    <div>
+                      {/* Image & Badge */}
+                      <div className="relative h-48 w-full bg-white/5 overflow-hidden">
+                        {pkg.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={pkg.image_url}
+                            alt={pkg.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white/30 text-xs">
+                            Diamond Trans Paket
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0c] via-transparent to-transparent"></div>
+                        
+                        {pkg.badge && (
+                          <span className="absolute top-3 left-3 bg-gold text-black text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                            {pkg.badge}
+                          </span>
+                        )}
+                        <span className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white/90 text-xs px-2.5 py-1 rounded-lg border border-white/10">
+                          {pkg.duration}
+                        </span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-5 md:p-6 space-y-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-white group-hover:text-gold transition-colors">
+                            {pkg.name}
+                          </h3>
+                          <p className="text-xs text-white/60 mt-1">{pkg.tagline}</p>
+                        </div>
+
+                        {/* 3 Pillars: Mobil, Hotel, Travel */}
+                        <div className="space-y-2.5 pt-2 border-t border-white/10 text-xs">
+                          <div className="flex items-start gap-2.5">
+                            <span className="w-6 h-6 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0 mt-0.5">
+                              🚗
+                            </span>
+                            <div>
+                              <p className="font-semibold text-white">Armada & Transport</p>
+                              <p className="text-white/60">{pkg.car_details}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2.5">
+                            <span className="w-6 h-6 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0 mt-0.5">
+                              🏨
+                            </span>
+                            <div>
+                              <p className="font-semibold text-white">Akomodasi Hotel</p>
+                              <p className="text-white/60">{pkg.hotel_details}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2.5">
+                            <span className="w-6 h-6 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0 mt-0.5">
+                              🧭
+                            </span>
+                            <div>
+                              <p className="font-semibold text-white">Rute Wisata & Tour</p>
+                              <p className="text-white/60">{pkg.travel_details}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Highlights */}
+                        {pkg.highlights && pkg.highlights.length > 0 && (
+                          <div className="pt-2 border-t border-white/5">
+                            <p className="text-[11px] font-semibold text-gold/90 uppercase tracking-wider mb-1.5">Fasilitas Termasuk:</p>
+                            <ul className="grid grid-cols-1 gap-1 text-[11px] text-white/70">
+                              {pkg.highlights.map((h, i) => (
+                                <li key={i} className="flex items-center gap-1.5">
+                                  <span className="text-gold">✓</span> {h}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer / Booking */}
+                    <div className="p-5 md:p-6 pt-0 border-t border-white/10 mt-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] text-white/50">Mulai dari</p>
+                        <p className="text-lg font-bold text-white">
+                          Rp {Number(pkg.price).toLocaleString("id-ID")}
+                        </p>
+                      </div>
+                      <a
+                        href={waLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gold hover:bg-gold/90 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-gold/20 flex items-center gap-1.5"
+                      >
+                        Pesan Paket
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Popular Cars Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,18 +346,18 @@ export default async function Home() {
             Hubungi kami sekarang dan dapatkan konfirmasi ketersediaan armada dalam hitungan menit.
           </p>
           <a
-            href="https://wa.me/6285923634253?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20mengetahui%20ketersediaan%20armada."
+            href={`https://wa.me/${ADMIN_WA}?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20mengetahui%20ketersediaan%20armada%20dan%20paket%20wisata.`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold px-8 py-4 rounded-xl transition-colors shadow-lg text-lg"
           >
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-            </svg>
-            Hubungi Kami via WhatsApp
-          </a>
-        </div>
-      </section>
-    </div>
-  );
+          </svg>
+          Hubungi Kami via WhatsApp
+        </a>
+      </div>
+    </section>
+  </div>
+);
 }

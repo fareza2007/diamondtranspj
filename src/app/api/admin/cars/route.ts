@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { parseOptionalNumber, parseRequiredNumber, processCarImage, startingPrice } from "@/lib/image";
+import { getCars, addCar } from "@/lib/db";
 
 function revalidatePublic() {
   revalidatePath("/");
@@ -50,7 +50,7 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const cars = await prisma.car.findMany({ orderBy: { created_at: "desc" } });
+  const cars = await getCars();
   return NextResponse.json({ cars });
 }
 
@@ -66,19 +66,20 @@ export async function POST(req: NextRequest) {
     }
 
     const file = form.get("image");
-    const directUrl = form.get("image_url_direct");
+    const directUrl = form.get("image_url_direct") || form.get("image_url");
     let image_url: string | null = directUrl ? String(directUrl) : null;
     
     if (!image_url && file instanceof File && file.size > 0) {
       image_url = await processCarImage(file);
     }
 
-    const car = await prisma.car.create({
-      data: { ...data, image_url },
+    const id = await addCar({
+      ...data,
+      image_url,
     });
 
     revalidatePublic();
-    return NextResponse.json({ success: true, car });
+    return NextResponse.json({ success: true, car: { id, ...data, image_url } });
   } catch (error) {
     console.error("Create car error:", error);
     const message = error instanceof Error ? error.message : "Gagal menambah armada.";

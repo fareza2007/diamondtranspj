@@ -3,10 +3,9 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatEventRange } from "@/lib/gp";
-import { upload } from '@vercel/blob/client';
 
 type CarRecord = {
-  id: number;
+  id: string;
   name: string;
   brand: string;
   transmission: string;
@@ -24,12 +23,27 @@ type CarRecord = {
 };
 
 type EventRecord = {
-  id: number;
+  id: string;
   name: string;
   start_date: string;
   end_date: string;
   location: string | null;
   description: string | null;
+  is_active: boolean;
+};
+
+type PackageRecord = {
+  id: string;
+  name: string;
+  tagline: string;
+  duration: string;
+  price: number;
+  badge?: string;
+  image_url?: string | null;
+  car_details: string;
+  hotel_details: string;
+  travel_details: string;
+  highlights?: string[];
   is_active: boolean;
 };
 
@@ -46,6 +60,21 @@ const emptyCar = {
   with_driver_available: true,
   with_keyless_available: true,
   status: "available",
+  image_url: "",
+};
+
+const emptyPackage = {
+  name: "",
+  tagline: "",
+  duration: "3 Hari 2 Malam",
+  price: "",
+  badge: "Paling Populer",
+  car_details: "Toyota All New Avanza / Veloz (Termasuk Sopir & BBM)",
+  hotel_details: "Hotel Bintang 4 di Mandalika (2 Malam + Sarapan Pagi)",
+  travel_details: "Sirkuit Mandalika, Pantai Kuta, Tanjung Aan, Bukit Merese, Desa Sade",
+  highlights: "Antar-jemput Bandara Lombok (BIL), Sopir & Pemandu Wisata, Tiket masuk semua destinasi",
+  image_url: "",
+  is_active: true,
 };
 
 function money(n: number | null) {
@@ -53,27 +82,67 @@ function money(n: number | null) {
   return `Rp ${Number(n).toLocaleString("id-ID")}`;
 }
 
-function toDateInput(value: string) {
-  return value ? value.slice(0, 10) : "";
+async function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxW = 1200;
+        const maxH = 800;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxW || h > maxH) {
+          if (w / h > maxW / maxH) {
+            h = Math.round((h * maxW) / w);
+            w = maxW;
+          } else {
+            w = Math.round((w * maxH) / h);
+            h = maxH;
+          }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(String(e.target?.result));
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/webp", 0.78));
+      };
+      img.onerror = reject;
+      img.src = String(e.target?.result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function AdminDashboard({
   cars,
   events,
+  packages = [],
 }: {
   cars: CarRecord[];
   events: EventRecord[];
+  packages?: PackageRecord[];
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"armada" | "event">("armada");
+  const [tab, setTab] = useState<"armada" | "paket" | "event">("armada");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const [editingId, setEditingId] = useState<number | "new" | null>(null);
+  // Cars state
+  const [editingCarId, setEditingCarId] = useState<string | "new" | null>(null);
   const [carForm, setCarForm] = useState(emptyCar);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [carImagePreview, setCarImagePreview] = useState<string | null>(null);
 
+  // Packages state
+  const [editingPkgId, setEditingPkgId] = useState<string | "new" | null>(null);
+  const [pkgForm, setPkgForm] = useState(emptyPackage);
+  const [pkgImagePreview, setPkgImagePreview] = useState<string | null>(null);
+
+  // Events state
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [eventForm, setEventForm] = useState({
     name: "",
     start_date: "",
@@ -82,26 +151,25 @@ export default function AdminDashboard({
     description: "",
     is_active: true,
   });
-  const [editingEventId, setEditingEventId] = useState<number | null>(null);
 
   const activeEvents = useMemo(() => events.filter((e) => e.is_active), [events]);
+  const activePackages = useMemo(() => packages.filter((p) => p.is_active), [packages]);
 
+  // Car actions
   const resetCarForm = () => {
-    setEditingId(null);
+    setEditingCarId(null);
     setCarForm(emptyCar);
-    setImageFile(null);
-    setImagePreview(null);
+    setCarImagePreview(null);
   };
 
   const openCreateCar = () => {
-    setEditingId("new");
+    setEditingCarId("new");
     setCarForm(emptyCar);
-    setImageFile(null);
-    setImagePreview(null);
+    setCarImagePreview(null);
   };
 
   const openEditCar = (car: CarRecord) => {
-    setEditingId(car.id);
+    setEditingCarId(car.id);
     setCarForm({
       name: car.name,
       brand: car.brand,
@@ -115,17 +183,20 @@ export default function AdminDashboard({
       with_driver_available: car.with_driver_available,
       with_keyless_available: car.with_keyless_available,
       status: car.status,
+      image_url: car.image_url || "",
     });
-    setImageFile(null);
-    setImagePreview(car.image_url);
+    setCarImagePreview(car.image_url);
   };
 
-  const onPickImage = (file: File | null) => {
-    setImageFile(file);
+  const onPickCarImage = async (file: File | null) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(String(reader.result || ""));
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file);
+      setCarImagePreview(compressed);
+      setCarForm((prev) => ({ ...prev, image_url: compressed }));
+    } catch (e) {
+      console.error("Image compress error:", e);
+    }
   };
 
   const submitCar = async (e: FormEvent) => {
@@ -138,30 +209,15 @@ export default function AdminDashboard({
         form.set(key, String(value));
       });
 
-      if (imageFile) {
-        try {
-          const newBlob = await upload(imageFile.name, imageFile, {
-            access: 'public',
-            handleUploadUrl: '/api/admin/upload',
-          });
-          form.set("image_url_direct", newBlob.url);
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-          setMessage(`Gagal mengupload: ${errorMessage}`);
-          setSaving(false);
-          return;
-        }
-      }
-
-      const url = editingId === "new" ? "/api/admin/cars" : `/api/admin/cars/${editingId}`;
-      const method = editingId === "new" ? "POST" : "PATCH";
+      const url = editingCarId === "new" ? "/api/admin/cars" : `/api/admin/cars/${editingCarId}`;
+      const method = editingCarId === "new" ? "POST" : "PATCH";
       const res = await fetch(url, { method, body: form });
       const data = await res.json();
       if (!res.ok) {
         setMessage(data.error || "Gagal menyimpan armada.");
         return;
       }
-      setMessage(editingId === "new" ? "Armada berhasil ditambahkan." : "Armada berhasil diperbarui.");
+      setMessage(editingCarId === "new" ? "Armada berhasil ditambahkan ke Firebase." : "Armada berhasil diperbarui.");
       resetCarForm();
       router.refresh();
     } catch {
@@ -182,7 +238,7 @@ export default function AdminDashboard({
         setMessage(data.error || "Gagal menghapus armada.");
         return;
       }
-      if (editingId === car.id) resetCarForm();
+      if (editingCarId === car.id) resetCarForm();
       setMessage(`${car.name} telah dihapus.`);
       router.refresh();
     } catch {
@@ -192,22 +248,125 @@ export default function AdminDashboard({
     }
   };
 
-  const submitEvent = async (e: FormEvent) => {
+  // Package actions
+  const resetPkgForm = () => {
+    setEditingPkgId(null);
+    setPkgForm(emptyPackage);
+    setPkgImagePreview(null);
+  };
+
+  const openCreatePkg = () => {
+    setEditingPkgId("new");
+    setPkgForm(emptyPackage);
+    setPkgImagePreview(null);
+  };
+
+  const openEditPkg = (pkg: PackageRecord) => {
+    setEditingPkgId(pkg.id);
+    setPkgForm({
+      name: pkg.name,
+      tagline: pkg.tagline,
+      duration: pkg.duration,
+      price: String(pkg.price),
+      badge: pkg.badge || "",
+      car_details: pkg.car_details,
+      hotel_details: pkg.hotel_details,
+      travel_details: pkg.travel_details,
+      highlights: (pkg.highlights || []).join(", "),
+      image_url: pkg.image_url || "",
+      is_active: pkg.is_active,
+    });
+    setPkgImagePreview(pkg.image_url || null);
+  };
+
+  const onPickPkgImage = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file);
+      setPkgImagePreview(compressed);
+      setPkgForm((prev) => ({ ...prev, image_url: compressed }));
+    } catch (e) {
+      console.error("Pkg image compress error:", e);
+    }
+  };
+
+  const submitPackage = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setMessage("");
     try {
       const payload = {
-        ...eventForm,
-        location: eventForm.location || null,
-        description: eventForm.description || null,
+        name: pkgForm.name,
+        tagline: pkgForm.tagline,
+        duration: pkgForm.duration,
+        price: Number(pkgForm.price),
+        badge: pkgForm.badge,
+        car_details: pkgForm.car_details,
+        hotel_details: pkgForm.hotel_details,
+        travel_details: pkgForm.travel_details,
+        highlights: pkgForm.highlights
+          .split(/[,;\n]/)
+          .map((s) => s.trim())
+          .filter(Boolean),
+        image_url: pkgForm.image_url || null,
+        is_active: pkgForm.is_active,
       };
+
+      const url = editingPkgId === "new" ? "/api/admin/packages" : `/api/admin/packages/${editingPkgId}`;
+      const method = editingPkgId === "new" ? "POST" : "PATCH";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "Gagal menyimpan paket wisata.");
+        return;
+      }
+      setMessage(editingPkgId === "new" ? "Paket wisata berhasil ditambahkan ke Firebase." : "Paket wisata diperbarui.");
+      resetPkgForm();
+      router.refresh();
+    } catch {
+      setMessage("Tidak bisa terhubung ke server.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deletePackage = async (pkg: PackageRecord) => {
+    if (!confirm(`Hapus paket "${pkg.name}"?`)) return;
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/admin/packages/${pkg.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "Gagal menghapus paket.");
+        return;
+      }
+      if (editingPkgId === pkg.id) resetPkgForm();
+      setMessage(`Paket "${pkg.name}" telah dihapus.`);
+      router.refresh();
+    } catch {
+      setMessage("Tidak bisa terhubung ke server.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Event actions
+  const submitEvent = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+    try {
       const url = editingEventId ? `/api/admin/events/${editingEventId}` : "/api/admin/events";
       const method = editingEventId ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(eventForm),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -225,20 +384,8 @@ export default function AdminDashboard({
     }
   };
 
-  const editEvent = (event: EventRecord) => {
-    setEditingEventId(event.id);
-    setEventForm({
-      name: event.name,
-      start_date: toDateInput(event.start_date),
-      end_date: toDateInput(event.end_date),
-      location: event.location || "",
-      description: event.description || "",
-      is_active: event.is_active,
-    });
-  };
-
   const deleteEvent = async (event: EventRecord) => {
-    if (!confirm(`Hapus event ${event.name}?`)) return;
+    if (!confirm(`Hapus event "${event.name}"?`)) return;
     setSaving(true);
     setMessage("");
     try {
@@ -272,60 +419,99 @@ export default function AdminDashboard({
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <header className="border-b border-white/10 bg-[#0a0a0a]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div>
-            <p className="text-gold text-xs uppercase tracking-widest">Diamond Trans</p>
-            <h1 className="text-white font-bold">Panel Admin</h1>
+            <p className="text-gold text-xs uppercase tracking-widest font-semibold">Diamond Trans</p>
+            <h1 className="text-white font-bold text-lg">Panel Manajemen Firebase</h1>
           </div>
-          <button onClick={logout} className="text-sm text-white/70 hover:text-white border border-white/20 px-4 py-2 rounded-lg">
+          <button
+            onClick={logout}
+            className="text-sm text-white/70 hover:text-white border border-white/20 px-4 py-2 rounded-lg transition-colors"
+          >
             Keluar
           </button>
         </div>
       </header>
 
+      {/* Main Container */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-3 mb-6">
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-2.5 mb-6">
           <button
             onClick={() => setTab("armada")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold ${tab === "armada" ? "bg-gold text-white" : "bg-white/5 text-white/70"}`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              tab === "armada" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
+            }`}
           >
-            Armada ({cars.length})
+            🚗 Armada ({cars.length})
+          </button>
+          <button
+            onClick={() => setTab("paket")}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              tab === "paket" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
+            }`}
+          >
+            🌴 Paket Wisata ({packages.length})
           </button>
           <button
             onClick={() => setTab("event")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold ${tab === "event" ? "bg-gold text-white" : "bg-white/5 text-white/70"}`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              tab === "event" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
+            }`}
           >
-            Event Aktif ({activeEvents.length})
+            📅 Event Khusus ({activeEvents.length})
           </button>
         </div>
 
+        {/* Status Message */}
         {message && (
-          <div className="mb-6 bg-gold/10 border border-gold/30 text-white text-sm px-4 py-3 rounded-xl">
-            {message}
+          <div className="mb-6 bg-gold/10 border border-gold/40 text-white text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+            <span>{message}</span>
+            <button onClick={() => setMessage("")} className="text-white/50 hover:text-white text-xs ml-4">
+              ✕
+            </button>
           </div>
         )}
 
+        {/* ========================================= */}
+        {/* TAB 1: ARMADA                             */}
+        {/* ========================================= */}
         {tab === "armada" && (
           <div className="grid lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-5">
+            <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-5 h-fit">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-white">{editingId === "new" ? "Tambah Armada" : editingId ? "Edit Armada" : "Form Armada"}</h2>
-                {editingId !== "new" && (
-                  <button onClick={openCreateCar} className="text-xs bg-gold text-white px-3 py-1.5 rounded-lg font-semibold">
-                    + Unit baru
+                <h2 className="font-bold text-white text-base">
+                  {editingCarId === "new" ? "Tambah Armada Baru" : editingCarId ? "Edit Armada" : "Form Armada"}
+                </h2>
+                {editingCarId !== "new" && (
+                  <button onClick={openCreateCar} className="text-xs bg-gold text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-gold/90 transition-all">
+                    + Unit Baru
                   </button>
                 )}
               </div>
+
               <form onSubmit={submitCar} className="space-y-3">
-                <input className={inputClass} placeholder="Nama unit, cth: All New Avanza" value={carForm.name} onChange={(e) => setCarForm({ ...carForm, name: e.target.value })} required />
-                <div className="grid grid-cols-2 gap-3">
-                  <input className={inputClass} placeholder="Merek" value={carForm.brand} onChange={(e) => setCarForm({ ...carForm, brand: e.target.value })} required />
-                  <select className={inputClass} value={carForm.transmission} onChange={(e) => setCarForm({ ...carForm, transmission: e.target.value })}>
-                    <option value="matic">Matic</option>
-                    <option value="manual">Manual</option>
-                  </select>
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Nama Mobil</label>
+                  <input className={inputClass} placeholder="Cth: All New Avanza" value={carForm.name} onChange={(e) => setCarForm({ ...carForm, name: e.target.value })} required />
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Merek</label>
+                    <input className={inputClass} placeholder="Cth: Toyota" value={carForm.brand} onChange={(e) => setCarForm({ ...carForm, brand: e.target.value })} required />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Transmisi</label>
+                    <select className={inputClass} value={carForm.transmission} onChange={(e) => setCarForm({ ...carForm, transmission: e.target.value })}>
+                      <option value="matic">Matic</option>
+                      <option value="manual">Manual</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-white/60 mb-1">Jumlah Kursi</label>
@@ -336,8 +522,8 @@ export default function AdminDashboard({
                     <input className={inputClass} type="number" min={1} placeholder="Cth: 12" value={carForm.driver_duration_hours} onChange={(e) => setCarForm({ ...carForm, driver_duration_hours: e.target.value })} />
                   </div>
                 </div>
-                
-                <p className="text-sm font-semibold text-white/80 pt-2 border-t border-white/10 mt-2">Harga Hari Biasa</p>
+
+                <p className="text-xs font-semibold text-white/80 pt-2 border-t border-white/10 mt-2">Harga Hari Biasa</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-white/60 mb-1">Lepas Kunci</label>
@@ -348,44 +534,55 @@ export default function AdminDashboard({
                     <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_dengan_sopir} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir: e.target.value })} />
                   </div>
                 </div>
-                
-                <p className="text-sm font-semibold text-white/80 pt-2 border-t border-white/10 mt-2">Harga Event Khusus <span className="text-xs font-normal text-white/40">(Kosongkan jika sama)</span></p>
+
+                <p className="text-xs font-semibold text-white/80 pt-2 border-t border-white/10 mt-2">Harga Event Khusus <span className="text-[10px] font-normal text-white/40">(Opsional)</span></p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-white/60 mb-1">Lepas Kunci (Event)</label>
+                    <label className="block text-xs text-white/60 mb-1">Lepas Kunci Event</label>
                     <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_lepas_kunci_gp} onChange={(e) => setCarForm({ ...carForm, price_lepas_kunci_gp: e.target.value })} />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/60 mb-1">Dengan Sopir (Event)</label>
+                    <label className="block text-xs text-white/60 mb-1">Dengan Sopir Event</label>
                     <input className={inputClass} type="number" min={0} placeholder="Rp" value={carForm.price_dengan_sopir_gp} onChange={(e) => setCarForm({ ...carForm, price_dengan_sopir_gp: e.target.value })} />
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-white/80">
-                  <input type="checkbox" checked={carForm.with_keyless_available} onChange={(e) => setCarForm({ ...carForm, with_keyless_available: e.target.checked })} />
-                  Tersedia lepas kunci
-                </label>
-                <label className="flex items-center gap-2 text-sm text-white/80">
-                  <input type="checkbox" checked={carForm.with_driver_available} onChange={(e) => setCarForm({ ...carForm, with_driver_available: e.target.checked })} />
-                  Tersedia dengan sopir
-                </label>
-                <select className={inputClass} value={carForm.status} onChange={(e) => setCarForm({ ...carForm, status: e.target.value })}>
-                  <option value="available">Tampil di katalog</option>
-                  <option value="unavailable">Sembunyikan</option>
-                </select>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer">
+                    <input type="checkbox" checked={carForm.with_keyless_available} onChange={(e) => setCarForm({ ...carForm, with_keyless_available: e.target.checked })} />
+                    Tersedia lepas kunci
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer">
+                    <input type="checkbox" checked={carForm.with_driver_available} onChange={(e) => setCarForm({ ...carForm, with_driver_available: e.target.checked })} />
+                    Tersedia dengan sopir
+                  </label>
+                </div>
+
                 <div>
-                  <label className="block text-xs text-white/70 mb-1">Foto unit</label>
-                  <input type="file" accept="image/*" onChange={(e) => onPickImage(e.target.files?.[0] || null)} className="block w-full text-xs text-white/70" />
-                  {imagePreview && (
+                  <label className="block text-xs text-white/60 mb-1">Status Katalog</label>
+                  <select className={inputClass} value={carForm.status} onChange={(e) => setCarForm({ ...carForm, status: e.target.value })}>
+                    <option value="available">Tampil di katalog</option>
+                    <option value="unavailable">Sembunyikan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Foto Mobil (Bebas Ukuran - Otomatis Dioptimalkan)</label>
+                  <input type="file" accept="image/*" onChange={(e) => onPickCarImage(e.target.files?.[0] || null)} className="block w-full text-xs text-white/70" />
+                  <p className="text-[11px] text-white/40 my-1">Atau masukkan URL gambar langsung:</p>
+                  <input className={inputClass} placeholder="https://..." value={carForm.image_url} onChange={(e) => { setCarForm({ ...carForm, image_url: e.target.value }); setCarImagePreview(e.target.value); }} />
+                  {carImagePreview && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imagePreview} alt="Preview" className="mt-3 w-full rounded-lg border border-white/10" />
+                    <img src={carImagePreview} alt="Preview" className="mt-3 w-full h-36 object-contain rounded-lg border border-white/10 bg-black/40" />
                   )}
                 </div>
+
                 <div className="flex gap-2 pt-2">
-                  <button disabled={saving || !editingId} className="flex-1 bg-gold disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl">
-                    {saving ? "Menyimpan..." : editingId === "new" ? "Tambah unit" : "Simpan perubahan"}
+                  <button disabled={saving} className="flex-1 bg-gold hover:bg-gold/90 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-all">
+                    {saving ? "Menyimpan ke Firebase..." : editingCarId === "new" ? "Simpan Unit Baru" : "Simpan Perubahan"}
                   </button>
-                  {editingId && (
-                    <button type="button" onClick={resetCarForm} className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70">
+                  {editingCarId && (
+                    <button type="button" onClick={resetCarForm} className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 hover:text-white">
                       Batal
                     </button>
                   )}
@@ -394,34 +591,39 @@ export default function AdminDashboard({
             </div>
 
             <div className="lg:col-span-3 space-y-3">
-              {cars.length === 0 && <p className="text-white/60">Belum ada armada.</p>}
+              <h2 className="font-bold text-white text-base mb-2">Daftar Armada di Firebase ({cars.length})</h2>
               {cars.map((car) => (
-                <div key={car.id} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-4 flex gap-4">
-                  <div className="w-28 shrink-0 rounded-lg overflow-hidden bg-white/5">
-                    {car.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={car.image_url} alt={car.name} className="w-full h-full object-contain" />
-                    ) : (
-                      <div className="h-20 flex items-center justify-center text-xs text-white/40">Tanpa foto</div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-white">{car.name}</h3>
-                        <p className="text-xs text-white/50 capitalize">{car.brand} · {car.transmission} · {car.seats} kursi</p>
+                <div key={car.id} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-4 flex gap-4 items-center justify-between">
+                  <div className="flex gap-3 items-center">
+                    <div className="w-20 h-14 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                      {car.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={car.image_url} alt={car.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-[10px] text-white/30">No Image</span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-sm">{car.name}</h3>
+                        <span className="text-[10px] bg-white/10 text-white/70 px-2 py-0.5 rounded capitalize">{car.brand}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded ${car.status === "available" ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
+                          {car.status === "available" ? "Aktif" : "Sembunyi"}
+                        </span>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded h-fit ${car.status === "available" ? "bg-gold/20 text-gold" : "bg-white/10 text-white/50"}`}>
-                        {car.status === "available" ? "Aktif" : "Disembunyikan"}
-                      </span>
+                      <p className="text-xs text-white/60 mt-1">
+                        Mulai {money(car.price_per_day)}/hari · Lepas Kunci: {money(car.price_lepas_kunci)} · Sopir: {money(car.price_dengan_sopir)}
+                      </p>
                     </div>
-                    <p className="text-xs text-white/70 mt-2">
-                      Hari biasa: {money(car.price_lepas_kunci)} / {money(car.price_dengan_sopir)} · Event: {money(car.price_lepas_kunci_gp)} / {money(car.price_dengan_sopir_gp)}
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <button onClick={() => openEditCar(car)} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg">Edit</button>
-                      <button onClick={() => deleteCar(car)} className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">Hapus</button>
-                    </div>
+                  </div>
+
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => openEditCar(car)} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg">
+                      Edit
+                    </button>
+                    <button onClick={() => deleteCar(car)} className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">
+                      Hapus
+                    </button>
                   </div>
                 </div>
               ))}
@@ -429,10 +631,151 @@ export default function AdminDashboard({
           </div>
         )}
 
+        {/* ========================================= */}
+        {/* TAB 2: PAKET WISATA (MOBIL + HOTEL + TOUR)*/}
+        {/* ========================================= */}
+        {tab === "paket" && (
+          <div className="grid lg:grid-cols-5 gap-6">
+            <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-5 h-fit">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold text-white text-base">
+                  {editingPkgId === "new" ? "Tambah Paket Wisata" : editingPkgId ? "Edit Paket Wisata" : "Form Paket Wisata"}
+                </h2>
+                {editingPkgId !== "new" && (
+                  <button onClick={openCreatePkg} className="text-xs bg-gold text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-gold/90 transition-all">
+                    + Paket Baru
+                  </button>
+                )}
+              </div>
+
+              <form onSubmit={submitPackage} className="space-y-3">
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Nama Paket Wisata</label>
+                  <input className={inputClass} placeholder="Cth: Paket Eksplor Mandalika 3D2N" value={pkgForm.name} onChange={(e) => setPkgForm({ ...pkgForm, name: e.target.value })} required />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Tagline / Deskripsi Singkat</label>
+                  <input className={inputClass} placeholder="Cth: Mobil + Hotel Bintang 4 + Tour Wisata Lengkap" value={pkgForm.tagline} onChange={(e) => setPkgForm({ ...pkgForm, tagline: e.target.value })} required />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Durasi</label>
+                    <input className={inputClass} placeholder="Cth: 3 Hari 2 Malam" value={pkgForm.duration} onChange={(e) => setPkgForm({ ...pkgForm, duration: e.target.value })} required />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1">Harga Total (Rp)</label>
+                    <input className={inputClass} type="number" min={0} placeholder="Cth: 2750000" value={pkgForm.price} onChange={(e) => setPkgForm({ ...pkgForm, price: e.target.value })} required />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Badge Promosi (Opsional)</label>
+                  <input className={inputClass} placeholder="Cth: Paling Populer / Rekomendasi / Hemat" value={pkgForm.badge} onChange={(e) => setPkgForm({ ...pkgForm, badge: e.target.value })} />
+                </div>
+
+                <p className="text-xs font-semibold text-gold pt-2 border-t border-white/10 mt-2">Detail 3 Komponen Utama:</p>
+
+                <div>
+                  <label className="block text-xs text-white/70 mb-1">🚗 Detail Mobil & Transport</label>
+                  <input className={inputClass} placeholder="Cth: Toyota All New Avanza / Veloz (Termasuk Sopir & BBM)" value={pkgForm.car_details} onChange={(e) => setPkgForm({ ...pkgForm, car_details: e.target.value })} required />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/70 mb-1">🏨 Detail Hotel & Akomodasi</label>
+                  <input className={inputClass} placeholder="Cth: Hotel Bintang 4 di Mandalika (2 Malam + Sarapan Pagi)" value={pkgForm.hotel_details} onChange={(e) => setPkgForm({ ...pkgForm, hotel_details: e.target.value })} required />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/70 mb-1">🧭 Detail Rute Wisata & Tour</label>
+                  <textarea rows={2} className={inputClass} placeholder="Cth: Sirkuit Mandalika, Pantai Kuta, Tanjung Aan, Bukit Merese, Desa Sade" value={pkgForm.travel_details} onChange={(e) => setPkgForm({ ...pkgForm, travel_details: e.target.value })} required />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/70 mb-1">Fasilitas Termasuk (Pisahkan dengan koma)</label>
+                  <input className={inputClass} placeholder="Antar jemput bandara, Tiket masuk, Tour guide" value={pkgForm.highlights} onChange={(e) => setPkgForm({ ...pkgForm, highlights: e.target.value })} />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-white/60 mb-1">Foto Paket Wisata</label>
+                  <input type="file" accept="image/*" onChange={(e) => onPickPkgImage(e.target.files?.[0] || null)} className="block w-full text-xs text-white/70" />
+                  <p className="text-[11px] text-white/40 my-1">Atau masukkan URL gambar langsung:</p>
+                  <input className={inputClass} placeholder="https://..." value={pkgForm.image_url} onChange={(e) => { setPkgForm({ ...pkgForm, image_url: e.target.value }); setPkgImagePreview(e.target.value); }} />
+                  {pkgImagePreview && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={pkgImagePreview} alt="Preview" className="mt-3 w-full h-36 object-cover rounded-lg border border-white/10" />
+                  )}
+                </div>
+
+                <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer pt-1">
+                  <input type="checkbox" checked={pkgForm.is_active} onChange={(e) => setPkgForm({ ...pkgForm, is_active: e.target.checked })} />
+                  Tampilkan paket ini di beranda website
+                </label>
+
+                <div className="flex gap-2 pt-2">
+                  <button disabled={saving} className="flex-1 bg-gold hover:bg-gold/90 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-all">
+                    {saving ? "Menyimpan ke Firebase..." : editingPkgId === "new" ? "Tambah Paket" : "Simpan Paket"}
+                  </button>
+                  {editingPkgId && (
+                    <button type="button" onClick={resetPkgForm} className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 hover:text-white">
+                      Batal
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            <div className="lg:col-span-3 space-y-3">
+              <h2 className="font-bold text-white text-base mb-2">Daftar Paket Wisata ({packages.length})</h2>
+              {packages.length === 0 && (
+                <p className="text-white/60 text-sm">Belum ada paket wisata. Klik "+ Paket Baru" untuk menambahkan.</p>
+              )}
+              {packages.map((pkg) => (
+                <div key={pkg.id} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-4 flex gap-4 items-center justify-between">
+                  <div className="flex gap-3 items-center">
+                    <div className="w-20 h-20 bg-white/5 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                      {pkg.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-white/30">No Image</span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-sm">{pkg.name}</h3>
+                        {pkg.badge && <span className="text-[10px] bg-gold/20 text-gold px-2 py-0.5 rounded">{pkg.badge}</span>}
+                        <span className={`text-[10px] px-2 py-0.5 rounded ${pkg.is_active ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
+                          {pkg.is_active ? "Tampil di Beranda" : "Sembunyi"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/60 mt-0.5">{pkg.duration} · {money(pkg.price)}</p>
+                      <p className="text-[11px] text-white/40 mt-1 line-clamp-1">🚗 {pkg.car_details} | 🏨 {pkg.hotel_details}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => openEditPkg(pkg)} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg">
+                      Edit
+                    </button>
+                    <button onClick={() => deletePackage(pkg)} className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================= */}
+        {/* TAB 3: EVENT KHUSUS                       */}
+        {/* ========================================= */}
         {tab === "event" && (
           <div className="grid lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-5">
-              <h2 className="font-bold text-white mb-4">{editingEventId ? "Edit Event" : "Tambah Event"}</h2>
+            <div className="lg:col-span-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-5 h-fit">
+              <h2 className="font-bold text-white mb-4">{editingEventId ? "Edit Event" : "Tambah Event Baru"}</h2>
               <form onSubmit={submitEvent} className="space-y-3">
                 <input className={inputClass} placeholder="Nama event, cth: Konser Mandalika 2026" value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} required />
                 <div className="grid grid-cols-2 gap-3">
@@ -447,13 +790,13 @@ export default function AdminDashboard({
                 </div>
                 <input className={inputClass} placeholder="Lokasi, cth: Sirkuit Mandalika" value={eventForm.location} onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })} />
                 <textarea className={inputClass} rows={3} placeholder="Catatan singkat (opsional)" value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} />
-                <label className="flex items-center gap-2 text-sm text-white/80">
+                <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
                   <input type="checkbox" checked={eventForm.is_active} onChange={(e) => setEventForm({ ...eventForm, is_active: e.target.checked })} />
                   Tampilkan di website
                 </label>
-                <div className="flex gap-2">
-                  <button disabled={saving} className="flex-1 bg-gold disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl">
-                    {saving ? "Menyimpan..." : editingEventId ? "Simpan event" : "Tambah event"}
+                <div className="flex gap-2 pt-2">
+                  <button disabled={saving} className="flex-1 bg-gold hover:bg-gold/90 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-all">
+                    {saving ? "Menyimpan ke Firebase..." : editingEventId ? "Simpan Perubahan" : "Tambah Event"}
                   </button>
                   {editingEventId && (
                     <button
@@ -472,23 +815,40 @@ export default function AdminDashboard({
             </div>
 
             <div className="lg:col-span-3 space-y-3">
-              {events.length === 0 && <p className="text-white/60">Belum ada event aktif. Tambahkan periode event agar harga khusus muncul di form pemesanan.</p>}
+              <h2 className="font-bold text-white text-base mb-2">Daftar Event ({events.length})</h2>
+              {events.length === 0 && <p className="text-white/60 text-sm">Belum ada event aktif.</p>}
               {events.map((event) => (
-                <div key={event.id} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-4">
-                  <div className="flex justify-between gap-3">
-                    <div>
+                <div key={event.id} className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-4 flex justify-between gap-3 items-center">
+                  <div>
+                    <div className="flex items-center gap-2">
                       <h3 className="font-bold text-white">{event.name}</h3>
-                      <p className="text-sm text-gold/90 mt-1">{formatEventRange(event.start_date, event.end_date)}</p>
-                      {event.location && <p className="text-xs text-white/50 mt-1">{event.location}</p>}
-                      {event.description && <p className="text-sm text-white/70 mt-2">{event.description}</p>}
+                      <span className={`text-[10px] px-2 py-0.5 rounded ${event.is_active ? "bg-gold/20 text-gold" : "bg-white/10 text-white/50"}`}>
+                        {event.is_active ? "Aktif" : "Nonaktif"}
+                      </span>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded h-fit ${event.is_active ? "bg-gold/20 text-gold" : "bg-white/10 text-white/50"}`}>
-                      {event.is_active ? "Tayang" : "Disembunyikan"}
-                    </span>
+                    <p className="text-xs text-gold/90 mt-1">{formatEventRange(event.start_date, event.end_date)}</p>
+                    {event.location && <p className="text-xs text-white/50 mt-0.5">📍 {event.location}</p>}
                   </div>
-                  <div className="flex gap-2 mt-3">
-                    <button onClick={() => editEvent(event)} className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg">Edit</button>
-                    <button onClick={() => deleteEvent(event)} className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">Hapus</button>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        setEditingEventId(event.id);
+                        setEventForm({
+                          name: event.name,
+                          start_date: event.start_date.slice(0, 10),
+                          end_date: event.end_date.slice(0, 10),
+                          location: event.location || "",
+                          description: event.description || "",
+                          is_active: event.is_active,
+                        });
+                      }}
+                      className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg"
+                    >
+                      Edit
+                    </button>
+                    <button onClick={() => deleteEvent(event)} className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">
+                      Hapus
+                    </button>
                   </div>
                 </div>
               ))}

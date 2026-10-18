@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getEvents, addEvent } from "@/lib/db";
 
 function revalidatePublic() {
   revalidatePath("/");
@@ -13,9 +13,7 @@ export async function GET() {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const events = await prisma.gpEvent.findMany({
-    orderBy: { start_date: "asc" },
-  });
+  const events = await getEvents();
   return NextResponse.json({ events });
 }
 
@@ -35,21 +33,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Tanggal selesai harus setelah tanggal mulai." }, { status: 400 });
     }
 
-    const event = await prisma.gpEvent.create({
-      data: {
-        name,
-        start_date: new Date(start_date),
-        end_date: new Date(end_date),
-        location: body.location ? String(body.location).trim() : null,
-        description: body.description ? String(body.description).trim() : null,
-        is_active: body.is_active !== false,
-      },
-    });
+    const eventData = {
+      name,
+      start_date,
+      end_date,
+      location: body.location ? String(body.location).trim() : null,
+      description: body.description ? String(body.description).trim() : null,
+      is_active: body.is_active !== false,
+    };
+
+    const id = await addEvent(eventData);
 
     revalidatePublic();
-    return NextResponse.json({ success: true, event });
+    return NextResponse.json({ success: true, event: { id, ...eventData } });
   } catch (error) {
     console.error("Create event error:", error);
-    return NextResponse.json({ error: "Gagal menambah event GP." }, { status: 500 });
+    return NextResponse.json({ error: "Gagal menambah event." }, { status: 500 });
   }
 }
