@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin-auth";
 import { updatePackage, deletePackage, getPackageById } from "@/lib/db";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 function revalidatePublic() {
   revalidatePath("/");
@@ -29,7 +30,13 @@ export async function PATCH(
     if (body.duration !== undefined) updateData.duration = String(body.duration).trim();
     if (body.price !== undefined) updateData.price = Number(body.price);
     if (body.badge !== undefined) updateData.badge = String(body.badge).trim();
-    if (body.image_url !== undefined) updateData.image_url = body.image_url ? String(body.image_url).trim() : null;
+    if (body.image_url !== undefined) {
+      let img = body.image_url ? String(body.image_url).trim() : null;
+      if (img && img.startsWith("data:")) {
+        img = await uploadToCloudinary(img, "diamond-trans/packages");
+      }
+      updateData.image_url = img;
+    }
     if (body.car_details !== undefined) updateData.car_details = String(body.car_details).trim();
     if (body.hotel_details !== undefined) updateData.hotel_details = String(body.hotel_details).trim();
     if (body.travel_details !== undefined) updateData.travel_details = String(body.travel_details).trim();

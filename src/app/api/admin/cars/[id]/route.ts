@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin-auth";
 import { parseOptionalNumber, parseRequiredNumber, processCarImage, startingPrice } from "@/lib/image";
 import { updateCar, deleteCar, getCarById } from "@/lib/db";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 function revalidatePublic() {
   revalidatePath("/");
@@ -40,9 +41,16 @@ export async function PATCH(
     let image_url: string | undefined;
 
     if (directUrl) {
-      image_url = String(directUrl);
+      const urlStr = String(directUrl);
+      if (urlStr.startsWith("data:")) {
+        image_url = await uploadToCloudinary(urlStr, "diamond-trans/cars");
+      } else {
+        image_url = urlStr;
+      }
     } else if (file instanceof File && file.size > 0) {
-      image_url = await processCarImage(file);
+      const bytes = await file.arrayBuffer();
+      const base64 = `data:${file.type};base64,${Buffer.from(bytes).toString("base64")}`;
+      image_url = await uploadToCloudinary(base64, "diamond-trans/cars");
     }
 
     const updateData: any = {
