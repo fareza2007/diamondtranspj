@@ -31,9 +31,9 @@ export default function KontakPage() {
                   </svg>
                 ),
                 title: "WhatsApp (Utama)",
-                detail: "0831-2944-2611",
+                detail: "0851-3735-2454",
                 sub: "Respons cepat, tersedia 07.00 – 22.00 WITA",
-                href: "https://wa.me/6283129442611",
+                href: "https://wa.me/6285137352454",
                 cta: "Chat Sekarang",
               },
               {
@@ -127,7 +127,7 @@ export default function KontakPage() {
                 Sebagian besar konfirmasi pesanan kami selesaikan dalam 5 menit via WhatsApp. Tidak perlu isi formulir panjang — cukup chat langsung!
               </p>
               <a
-                href="https://wa.me/6283129442611?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20bertanya%20tentang%20rental%20mobil."
+                href="https://wa.me/6285137352454?text=Halo%20Diamond%20Trans%2C%20saya%20ingin%20bertanya%20tentang%20rental%20mobil."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full inline-flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold px-6 py-4 rounded-xl transition-colors text-lg shadow-md"

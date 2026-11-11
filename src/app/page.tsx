@@ -18,12 +18,12 @@ export default async function Home() {
     getPackages(true),
   ]);
 
-  const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || "6283129442611";
+  const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || "6285137352454";
 
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative py-24 lg:py-36 overflow-hidden">
+      <section className="relative py-12 md:py-24 lg:py-36 overflow-hidden">
         {/* Background Image */}
         <Image
           src="/hero-landscape.jpg"
