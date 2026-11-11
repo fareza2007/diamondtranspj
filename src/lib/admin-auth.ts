@@ -39,8 +39,8 @@ export function verifyAdminToken(token: string | undefined | null) {
 }
 
 export function getAdminCredentials() {
-  const username = process.env.ADMIN_USERNAME || "admin";
-  const password = process.env.ADMIN_PASSWORD;
+  const username = process.env.ADMIN_USERNAME || "diamondtrans";
+  const password = process.env.ADMIN_PASSWORD || "diamondtrans2026";
   return { username, password };
 }
 
