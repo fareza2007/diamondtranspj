@@ -316,14 +316,9 @@ export const DEFAULT_TRANSFERS: Omit<TransferRate, "id">[] = [
 
 export async function getTransfers(onlyActive = false): Promise<TransferRate[]> {
   try {
-    let q: FirebaseFirestore.Query = adminDb.collection("transfers");
-    if (onlyActive) {
-      q = q.where("is_active", "==", true);
-    }
-    const snap = await q.get();
-
-    // Jika koleksi masih kosong, otomatis seed data awal dari gambar
-    if (snap.empty && !onlyActive) {
+    // Cek apakah koleksi kosong dulu tanpa filter
+    const countSnap = await adminDb.collection("transfers").limit(1).get();
+    if (countSnap.empty) {
       console.log("Koleksi transfers kosong, melakukan auto-seed default transfers...");
       const batch = adminDb.batch();
       const colRef = adminDb.collection("transfers");
@@ -343,10 +338,23 @@ export async function getTransfers(onlyActive = false): Promise<TransferRate[]> 
       return seeded;
     }
 
+    let q: FirebaseFirestore.Query = adminDb.collection("transfers");
+    if (onlyActive) {
+      q = q.where("is_active", "==", true);
+    }
+    const snap = await q.get();
+
     const items: TransferRate[] = [];
     snap.forEach((d) => {
       items.push({ id: d.id, ...d.data() } as TransferRate);
     });
+
+    if (items.length === 0) {
+      return DEFAULT_TRANSFERS.map((item, idx) => ({
+        id: `default-${idx + 1}`,
+        ...item,
+      }));
+    }
 
     items.sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
     return items;
