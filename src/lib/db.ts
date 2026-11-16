@@ -46,6 +46,19 @@ export interface TourPackage {
   created_at?: string;
 }
 
+export interface TransferRate {
+  id: string;
+  destination: string;
+  price_avanza: number;
+  price_innova: number;
+  price_hiace: number;
+  price_bus: number;
+  note?: string | null;
+  order_index?: number;
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface Booking {
   id?: string;
   car_id?: string;
@@ -213,4 +226,164 @@ export async function addBooking(data: Booking): Promise<string> {
     created_at: new Date().toISOString(),
   });
   return res.id;
+}
+
+// ========================
+// PICK UP / TRANSFER SERVICE
+// ========================
+export const DEFAULT_TRANSFERS: Omit<TransferRate, "id">[] = [
+  {
+    destination: "Airport – Mataram",
+    price_avanza: 175000,
+    price_innova: 225000,
+    price_hiace: 500000,
+    price_bus: 850000,
+    note: "Pusat kota Mataram, kantor pemerintahan & hotel bisnis",
+    order_index: 1,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Senggigi",
+    price_avanza: 225000,
+    price_innova: 275000,
+    price_hiace: 550000,
+    price_bus: 950000,
+    note: "Kawasan resort pantai Senggigi, Batu Layar & Mangsit",
+    order_index: 2,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Kuta Area",
+    price_avanza: 200000,
+    price_innova: 250000,
+    price_hiace: 600000,
+    price_bus: 1150000,
+    note: "Kuta Mandalika, Sirkuit GP, Tanjung Aan & Bukit Merese",
+    order_index: 3,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Bangsal",
+    price_avanza: 300000,
+    price_innova: 350000,
+    price_hiace: 650000,
+    price_bus: 1100000,
+    note: "Pelabuhan penyeberangan ke Gili Trawangan, Meno & Air",
+    order_index: 4,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Bayan",
+    price_avanza: 400000,
+    price_innova: 450000,
+    price_hiace: 800000,
+    price_bus: 1450000,
+    note: "Lombok Utara, masjid kuno Bayan & desa adat",
+    order_index: 5,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Selong",
+    price_avanza: 200000,
+    price_innova: 250000,
+    price_hiace: 600000,
+    price_bus: 800000,
+    note: "Pusat pemerintahan Lombok Timur",
+    order_index: 6,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Kayangan",
+    price_avanza: 450000,
+    price_innova: 500000,
+    price_hiace: 850000,
+    price_bus: 1500000,
+    note: "Pelabuhan penyeberangan kapal ferry menuju Sumbawa",
+    order_index: 7,
+    is_active: true,
+  },
+  {
+    destination: "Airport – Senaru",
+    price_avanza: 450000,
+    price_innova: 500000,
+    price_hiace: 850000,
+    price_bus: 1550000,
+    note: "Kawasan air terjun Sendang Gile & jalur pendakian Gn. Rinjani",
+    order_index: 8,
+    is_active: true,
+  },
+];
+
+export async function getTransfers(onlyActive = false): Promise<TransferRate[]> {
+  try {
+    let q: FirebaseFirestore.Query = adminDb.collection("transfers");
+    if (onlyActive) {
+      q = q.where("is_active", "==", true);
+    }
+    const snap = await q.get();
+
+    // Jika koleksi masih kosong, otomatis seed data awal dari gambar
+    if (snap.empty && !onlyActive) {
+      console.log("Koleksi transfers kosong, melakukan auto-seed default transfers...");
+      const batch = adminDb.batch();
+      const colRef = adminDb.collection("transfers");
+      const seeded: TransferRate[] = [];
+
+      for (const item of DEFAULT_TRANSFERS) {
+        const docRef = colRef.doc();
+        const payload = {
+          ...item,
+          created_at: new Date().toISOString(),
+        };
+        batch.set(docRef, payload);
+        seeded.push({ id: docRef.id, ...payload });
+      }
+
+      await batch.commit();
+      return seeded;
+    }
+
+    const items: TransferRate[] = [];
+    snap.forEach((d) => {
+      items.push({ id: d.id, ...d.data() } as TransferRate);
+    });
+
+    items.sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
+    return items;
+  } catch (error) {
+    console.error("Error fetching transfers:", error);
+    // Fallback ke default transfers jika ada kendala koneksi
+    return DEFAULT_TRANSFERS.map((item, idx) => ({
+      id: `default-${idx + 1}`,
+      ...item,
+    }));
+  }
+}
+
+export async function getTransferById(id: string): Promise<TransferRate | null> {
+  try {
+    const docRef = adminDb.collection("transfers").doc(id);
+    const snap = await docRef.get();
+    if (!snap.exists) return null;
+    return { id: snap.id, ...snap.data() } as TransferRate;
+  } catch (error) {
+    console.error(`Error fetching transfer ${id}:`, error);
+    return null;
+  }
+}
+
+export async function addTransfer(data: Omit<TransferRate, "id">): Promise<string> {
+  const res = await adminDb.collection("transfers").add({
+    ...data,
+    created_at: new Date().toISOString(),
+  });
+  return res.id;
+}
+
+export async function updateTransfer(id: string, data: Partial<TransferRate>): Promise<void> {
+  await adminDb.collection("transfers").doc(id).update({ ...data });
+}
+
+export async function deleteTransfer(id: string): Promise<void> {
+  await adminDb.collection("transfers").doc(id).delete();
 }

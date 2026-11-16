@@ -47,6 +47,29 @@ type PackageRecord = {
   is_active: boolean;
 };
 
+type TransferRecord = {
+  id: string;
+  destination: string;
+  price_avanza: number;
+  price_innova: number;
+  price_hiace: number;
+  price_bus: number;
+  note?: string | null;
+  order_index?: number;
+  is_active: boolean;
+};
+
+const emptyTransfer = {
+  destination: "",
+  price_avanza: "",
+  price_innova: "",
+  price_hiace: "",
+  price_bus: "",
+  note: "",
+  order_index: "1",
+  is_active: true,
+};
+
 const emptyCar = {
   name: "",
   brand: "",
@@ -227,15 +250,21 @@ export default function AdminDashboard({
   cars,
   events,
   packages = [],
+  transfers = [],
 }: {
   cars: CarRecord[];
   events: EventRecord[];
   packages?: PackageRecord[];
+  transfers?: TransferRecord[];
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"armada" | "paket" | "event">("armada");
+  const [tab, setTab] = useState<"armada" | "transfer" | "paket" | "event">("armada");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Transfers state
+  const [editingTransferId, setEditingTransferId] = useState<string | "new" | null>(null);
+  const [transferForm, setTransferForm] = useState(emptyTransfer);
 
   // Cars state
   const [editingCarId, setEditingCarId] = useState<string | "new" | null>(null);
@@ -516,6 +545,112 @@ export default function AdminDashboard({
     }
   };
 
+  // Transfer actions
+  const resetTransferForm = () => {
+    setEditingTransferId(null);
+    setTransferForm(emptyTransfer);
+  };
+
+  const openCreateTransfer = () => {
+    setEditingTransferId("new");
+    setTransferForm({
+      ...emptyTransfer,
+      order_index: String(transfers.length + 1),
+    });
+  };
+
+  const openEditTransfer = (t: TransferRecord) => {
+    setEditingTransferId(t.id);
+    setTransferForm({
+      destination: t.destination,
+      price_avanza: String(t.price_avanza || 0),
+      price_innova: String(t.price_innova || 0),
+      price_hiace: String(t.price_hiace || 0),
+      price_bus: String(t.price_bus || 0),
+      note: t.note || "",
+      order_index: String(t.order_index ?? 99),
+      is_active: t.is_active,
+    });
+  };
+
+  const submitTransfer = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+    try {
+      const payload = {
+        destination: transferForm.destination.trim(),
+        price_avanza: Number(transferForm.price_avanza) || 0,
+        price_innova: Number(transferForm.price_innova) || 0,
+        price_hiace: Number(transferForm.price_hiace) || 0,
+        price_bus: Number(transferForm.price_bus) || 0,
+        note: transferForm.note.trim() || null,
+        order_index: Number(transferForm.order_index) || 99,
+        is_active: transferForm.is_active,
+      };
+
+      const url = editingTransferId === "new" ? "/api/admin/transfers" : `/api/admin/transfers/${editingTransferId}`;
+      const method = editingTransferId === "new" ? "POST" : "PATCH";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "Gagal menyimpan rute antar-jemput.");
+        return;
+      }
+      setMessage(editingTransferId === "new" ? "Rute antar-jemput berhasil ditambahkan." : "Rute antar-jemput diperbarui.");
+      resetTransferForm();
+      router.refresh();
+    } catch {
+      setMessage("Tidak bisa terhubung ke server.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleTransferActive = async (t: TransferRecord) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/transfers/${t.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !t.is_active }),
+      });
+      if (res.ok) {
+        setMessage(`Status rute "${t.destination}" diubah menjadi ${!t.is_active ? "Aktif" : "Nonaktif"}.`);
+        router.refresh();
+      }
+    } catch {
+      setMessage("Gagal mengubah status rute.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteTransfer = async (t: TransferRecord) => {
+    if (!confirm(`Hapus rute "${t.destination}"?`)) return;
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/admin/transfers/${t.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "Gagal menghapus rute.");
+        return;
+      }
+      if (editingTransferId === t.id) resetTransferForm();
+      setMessage(`Rute "${t.destination}" telah dihapus.`);
+      router.refresh();
+    } catch {
+      setMessage("Tidak bisa terhubung ke server.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -560,6 +695,20 @@ export default function AdminDashboard({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9h18M5 14h14M4 14l1.5-6h13L20 14" />
             </svg>
             Armada ({cars.length})
+          </button>
+          <button
+            onClick={() => {
+              setTab("transfer");
+              setEditingTransferId(null);
+            }}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              tab === "transfer" ? "bg-gold text-white shadow-lg shadow-gold/20" : "bg-white/5 text-white/70 hover:bg-white/10"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            Pick Up Service ({transfers.length})
           </button>
           <button
             onClick={() => {
@@ -1193,6 +1342,335 @@ export default function AdminDashboard({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ===================== TAB: PICK UP / TRANSFER SERVICE ===================== */}
+        {tab === "transfer" && (
+          <div>
+            {/* Header section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span>Pick Up Service / Antar-Jemput Bandara</span>
+                  <span className="text-xs bg-gold/20 text-gold px-2.5 py-0.5 rounded-full font-semibold">
+                    {transfers.length} Rute
+                  </span>
+                </h2>
+                <p className="text-xs text-white/60 mt-1">
+                  Kelola daftar destinasi dan tarif flat antar-jemput bandara (Avanza, Innova, Hiace, Bus 3/4).
+                </p>
+              </div>
+
+              {editingTransferId === null && (
+                <button
+                  onClick={openCreateTransfer}
+                  className="bg-gold hover:bg-gold/90 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-gold/20 flex items-center justify-center gap-2 shrink-0"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Tambah Rute Baru
+                </button>
+              )}
+            </div>
+
+            {/* Create / Edit Form */}
+            {editingTransferId !== null && (
+              <div className="bg-[#0a0a0a] border border-gold/30 rounded-2xl p-6 mb-8 shadow-xl">
+                <div className="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
+                  <h3 className="font-bold text-white text-base flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-gold"></span>
+                    {editingTransferId === "new" ? "Tambah Rute Antar-Jemput Baru" : "Edit Tarif Rute Antar-Jemput"}
+                  </h3>
+                  <button
+                    onClick={resetTransferForm}
+                    className="text-white/40 hover:text-white text-xs px-2.5 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    Batal (Esc)
+                  </button>
+                </div>
+
+                <form onSubmit={submitTransfer} className="space-y-4">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-white/80 mb-1.5">
+                        Nama Destinasi / Rute <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Airport – Senggigi"
+                        className={inputClass}
+                        value={transferForm.destination}
+                        onChange={(e) => setTransferForm({ ...transferForm, destination: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-white/80 mb-1.5">
+                        Urutan Tampilan
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        className={inputClass}
+                        value={transferForm.order_index}
+                        onChange={(e) => setTransferForm({ ...transferForm, order_index: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-white/80 mb-2">
+                      Tarif per Jenis Kendaraan (Rp) <span className="text-gold text-[11px] font-normal">(Sudah termasuk Mobil + Sopir + BBM)</span>
+                    </label>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="bg-[#040404] p-3 rounded-xl border border-white/10">
+                        <span className="text-[11px] text-gold font-semibold block mb-1">Avanza / Ertiga</span>
+                        <input
+                          type="number"
+                          placeholder="Contoh: 225000"
+                          className={inputClass}
+                          value={transferForm.price_avanza}
+                          onChange={(e) => setTransferForm({ ...transferForm, price_avanza: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="bg-[#040404] p-3 rounded-xl border border-white/10">
+                        <span className="text-[11px] text-gold font-semibold block mb-1">Innova Reborn</span>
+                        <input
+                          type="number"
+                          placeholder="Contoh: 275000"
+                          className={inputClass}
+                          value={transferForm.price_innova}
+                          onChange={(e) => setTransferForm({ ...transferForm, price_innova: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="bg-[#040404] p-3 rounded-xl border border-white/10">
+                        <span className="text-[11px] text-gold font-semibold block mb-1">Elf / Hiace</span>
+                        <input
+                          type="number"
+                          placeholder="Contoh: 550000"
+                          className={inputClass}
+                          value={transferForm.price_hiace}
+                          onChange={(e) => setTransferForm({ ...transferForm, price_hiace: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="bg-[#040404] p-3 rounded-xl border border-white/10">
+                        <span className="text-[11px] text-gold font-semibold block mb-1">Bus 3/4</span>
+                        <input
+                          type="number"
+                          placeholder="Contoh: 950000"
+                          className={inputClass}
+                          value={transferForm.price_bus}
+                          onChange={(e) => setTransferForm({ ...transferForm, price_bus: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-white/80 mb-1.5">
+                      Keterangan / Area Cakupan (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Area hotel pantai Senggigi, Batu Layar, Mangsit"
+                      className={inputClass}
+                      value={transferForm.note}
+                      onChange={(e) => setTransferForm({ ...transferForm, note: e.target.value })}
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2.5 text-xs text-white/90 cursor-pointer pt-1">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 accent-gold"
+                      checked={transferForm.is_active}
+                      onChange={(e) => setTransferForm({ ...transferForm, is_active: e.target.checked })}
+                    />
+                    Tampilkan rute ini di website publik
+                  </label>
+
+                  <div className="flex gap-3 pt-3">
+                    <button
+                      disabled={saving}
+                      className="flex-1 bg-gold hover:bg-gold/90 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-gold/20 text-sm"
+                    >
+                      {saving ? "Menyimpan ke Database..." : editingTransferId === "new" ? "Tambahkan Rute" : "Simpan Perubahan"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetTransferForm}
+                      className="px-5 py-3 rounded-xl border border-white/20 text-white/70 hover:text-white text-sm"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-lg">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-white/5 border-b border-white/10 text-white/70 font-semibold uppercase tracking-wider text-[11px]">
+                      <th className="py-3.5 px-4 w-12 text-center">#</th>
+                      <th className="py-3.5 px-4">Destinasi / Rute</th>
+                      <th className="py-3.5 px-4">Avanza / Ertiga</th>
+                      <th className="py-3.5 px-4">Innova</th>
+                      <th className="py-3.5 px-4">Elf / Hiace</th>
+                      <th className="py-3.5 px-4">Bus 3/4</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {transfers.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center text-white/50 text-sm">
+                          Belum ada data tarif rute antar-jemput. Klik &ldquo;Tambah Rute Baru&rdquo; untuk memulai.
+                        </td>
+                      </tr>
+                    ) : (
+                      transfers.map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3.5 px-4 text-center text-white/40 font-mono">
+                            {item.order_index ?? idx + 1}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-white text-sm block">
+                              {item.destination}
+                            </span>
+                            {item.note && (
+                              <span className="text-[11px] text-white/50 block mt-0.5">
+                                {item.note}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-white font-medium">
+                            {money(item.price_avanza)}
+                          </td>
+                          <td className="py-3.5 px-4 text-white font-medium">
+                            {money(item.price_innova)}
+                          </td>
+                          <td className="py-3.5 px-4 text-white font-medium">
+                            {money(item.price_hiace)}
+                          </td>
+                          <td className="py-3.5 px-4 text-white font-medium">
+                            {money(item.price_bus)}
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              onClick={() => toggleTransferActive(item)}
+                              className={`text-[10px] font-semibold px-2.5 py-1 rounded-full cursor-pointer transition-all ${
+                                item.is_active
+                                  ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                                  : "bg-white/10 text-white/50 hover:bg-white/20"
+                              }`}
+                              title="Klik untuk ubah status"
+                            >
+                              {item.is_active ? "Aktif" : "Nonaktif"}
+                            </button>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => openEditTransfer(item)}
+                                className="text-[11px] bg-white/10 hover:bg-gold hover:text-white text-white/90 font-medium px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteTransfer(item)}
+                                className="text-[11px] bg-red-500/15 hover:bg-red-500/30 text-red-300 px-2.5 py-1.5 rounded-lg transition-colors"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-3">
+              {transfers.length === 0 ? (
+                <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-6 text-center text-white/50 text-sm">
+                  Belum ada data tarif rute antar-jemput.
+                </div>
+              ) : (
+                transfers.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4 transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-gold bg-gold/10 px-1.5 py-0.5 rounded">
+                            #{item.order_index ?? idx + 1}
+                          </span>
+                          <h4 className="font-bold text-white text-sm">{item.destination}</h4>
+                        </div>
+                        {item.note && <p className="text-xs text-white/50 mt-1">{item.note}</p>}
+                      </div>
+                      <button
+                        onClick={() => toggleTransferActive(item)}
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                          item.is_active ? "bg-green-500/20 text-green-300" : "bg-white/10 text-white/50"
+                        }`}
+                      >
+                        {item.is_active ? "Aktif" : "Nonaktif"}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 my-3 text-xs bg-black/40 p-2.5 rounded-lg border border-white/5">
+                      <div>
+                        <span className="text-white/40 block text-[10px]">Avanza/Ertiga:</span>
+                        <span className="font-semibold text-white">{money(item.price_avanza)}</span>
+                      </div>
+                      <div>
+                        <span className="text-white/40 block text-[10px]">Innova:</span>
+                        <span className="font-semibold text-white">{money(item.price_innova)}</span>
+                      </div>
+                      <div>
+                        <span className="text-white/40 block text-[10px]">Elf/Hiace:</span>
+                        <span className="font-semibold text-white">{money(item.price_hiace)}</span>
+                      </div>
+                      <div>
+                        <span className="text-white/40 block text-[10px]">Bus 3/4:</span>
+                        <span className="font-semibold text-white">{money(item.price_bus)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => openEditTransfer(item)}
+                        className="flex-1 text-xs bg-white/10 hover:bg-gold hover:text-white text-white/90 font-medium py-1.5 rounded-lg transition-colors text-center"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteTransfer(item)}
+                        className="text-xs bg-red-500/15 hover:bg-red-500/30 text-red-300 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

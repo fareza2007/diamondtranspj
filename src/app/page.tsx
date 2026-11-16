@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import HeroSearch from "@/components/ui/HeroSearch";
 import { formatEventRange } from "@/lib/gp";
-import { getCars, getEvents, getPackages } from "@/lib/db";
+import { getCars, getEvents, getPackages, getTransfers } from "@/lib/db";
 
 export const metadata = {
   title: "Beranda - Diamond Trans Rental Mobil Lombok & Bali",
@@ -12,10 +12,11 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [cars, gpEvents, packages] = await Promise.all([
+  const [cars, gpEvents, packages, transfers] = await Promise.all([
     getCars(true, 3),
     getEvents(true),
     getPackages(true),
+    getTransfers(true),
   ]);
 
   const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || "6285137352454";
@@ -284,6 +285,84 @@ export default async function Home() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Pick Up Service (Airport Transfer) Showcase */}
+      {transfers.length > 0 && (
+        <section className="py-20 bg-gradient-to-b from-[#0a0a0a] to-[#050505] border-t border-white/5 relative overflow-hidden">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div>
+                <p className="text-gold text-sm font-semibold mb-2 tracking-[0.2em] uppercase">
+                  Point-to-Point Shuttle
+                </p>
+                <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                  Pick Up Service <span className="text-gold">Bandara Lombok</span>
+                </h2>
+                <p className="text-white/70 max-w-xl mt-3 text-sm md:text-base">
+                  Layanan antar-jemput bandara (BIL) ke berbagai kawasan wisata dan hotel favorit di Lombok. Tarif flat transparan sudah termasuk mobil, sopir, dan BBM.
+                </p>
+              </div>
+              <Link
+                href="/antar-jemput"
+                className="inline-flex items-center gap-2 bg-gold/15 hover:bg-gold text-gold hover:text-white border border-gold/30 font-semibold px-5 py-3 rounded-xl transition-all text-sm shrink-0"
+              >
+                <span>Lihat Semua Rute &amp; Hitung Tarif</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {transfers.slice(0, 4).map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-[#0e0e0e] border border-white/10 hover:border-gold/40 rounded-2xl p-5 flex flex-col justify-between transition-all group hover:-translate-y-1 shadow-lg"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gold bg-gold/15 px-2 py-0.5 rounded-full">
+                        Airport Transfer
+                      </span>
+                      <span className="text-white/40 text-[11px]">Sekali Jalan</span>
+                    </div>
+                    <h3 className="font-bold text-white text-lg group-hover:text-gold transition-colors">
+                      {item.destination}
+                    </h3>
+                    {item.note && (
+                      <p className="text-xs text-white/50 mt-1 line-clamp-2">
+                        {item.note}
+                      </p>
+                    )}
+
+                    <div className="mt-4 pt-3 border-t border-white/5 space-y-2 text-xs">
+                      <div className="flex justify-between items-center text-white/70">
+                        <span>Avanza / Ertiga:</span>
+                        <span className="font-semibold text-white">Rp {item.price_avanza ? item.price_avanza.toLocaleString("id-ID") : "-"}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-gold">
+                        <span className="font-medium">Innova Reborn:</span>
+                        <span className="font-bold">Rp {item.price_innova ? item.price_innova.toLocaleString("id-ID") : "-"}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-white/70">
+                        <span>Elf / Hiace:</span>
+                        <span className="font-semibold text-white">Rp {item.price_hiace ? item.price_hiace.toLocaleString("id-ID") : "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/antar-jemput"
+                    className="mt-5 w-full bg-white/5 hover:bg-gold text-white/90 hover:text-white border border-white/10 hover:border-gold font-semibold py-2.5 rounded-xl text-xs text-center transition-all block"
+                  >
+                    Pesan Rute Ini
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
         </section>

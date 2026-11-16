@@ -86,6 +86,7 @@ export default function Footer() {
               {[
                 { label: "Beranda", href: "/" },
                 { label: "Katalog Armada", href: "/armada" },
+                { label: "Antar-Jemput Bandara", href: "/antar-jemput" },
                 { label: "Area Layanan", href: "/lokasi" },
                 { label: "Kontak Kami", href: "/kontak" },
               ].map((link) => (

@@ -14,6 +14,7 @@ export default function Navbar() {
   const links = [
     { label: 'Beranda', href: '/' },
     { label: 'Armada Kami', href: '/armada' },
+    { label: 'Antar Jemput', href: '/antar-jemput' },
     { label: 'Lokasi', href: '/lokasi' },
     { label: 'Kontak', href: '/kontak' },
   ];
