@@ -19,13 +19,13 @@ export default function Footer() {
     "Kuta Lombok",
   ];
 
-  const baliAreas = [
-    "Bandara Ngurah Rai (DPS)",
-    "Kuta & Legian",
-    "Seminyak & Canggu",
-    "Ubud",
-    "Sanur & Nusa Dua",
-    "Pelabuhan Padang Bai",
+  const serviceList = [
+    "Rental Lepas Kunci",
+    "Rental + Sopir & BBM",
+    "Pick Up Bandara Lombok (BIL)",
+    "Paket Wisata & Hotel All-In",
+    "Antar-Jemput Pelabuhan Bangsal",
+    "Transport Event Mandalika GP",
   ];
 
   return (
@@ -38,10 +38,10 @@ export default function Footer() {
               <Image src="/logo_cropped.png" alt="Diamond Trans Logo" width={200} height={60} className="h-10 w-auto object-contain brightness-0 invert" />
             </Link>
             <p className="mt-4 text-sm text-white/60 leading-relaxed">
-              Layanan rental mobil terpercaya untuk wisatawan di Lombok dan Bali. Armada terawat, harga transparan, konfirmasi cepat via WhatsApp.
+              Layanan rental mobil terpercaya untuk wisatawan di Lombok. Armada terawat, harga transparan, konfirmasi cepat via WhatsApp.
             </p>
             <a
-              href="https://wa.me/6285137352454"
+              href="https://wa.me/6287796017325"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold px-4 py-2.5 rounded-lg transition-colors text-sm"
@@ -66,14 +66,14 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Bali Area */}
+          {/* Layanan Unggulan */}
           <div>
-            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">Area Layanan Bali</h3>
+            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">Layanan Kami</h3>
             <ul className="space-y-2">
-              {baliAreas.map((area) => (
-                <li key={area} className="text-sm text-white/60 flex items-center gap-2">
+              {serviceList.map((srv) => (
+                <li key={srv} className="text-sm text-white/60 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-sand/60 shrink-0"></span>
-                  {area}
+                  {srv}
                 </li>
               ))}
             </ul>
@@ -106,7 +106,7 @@ export default function Footer() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </div>
-                <span>0851-3735-2454</span>
+                <span>0877-9601-7325</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <div className="w-6 h-6 rounded-full bg-gold/15 text-gold flex items-center justify-center shrink-0">
@@ -133,7 +133,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-white/40">
           <p>&copy; {currentYear} Diamond Trans. Semua hak dilindungi.</p>
-          <p>Rental Mobil Lombok & Bali · Terpercaya sejak 2018</p>
+          <p>Rental Mobil Lombok · Terpercaya sejak 2018</p>
         </div>
       </div>
     </footer>

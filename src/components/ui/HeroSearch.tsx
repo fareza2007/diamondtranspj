@@ -53,7 +53,7 @@ export default function HeroSearch() {
           
           {locOpen && (
             <div className="absolute z-50 w-full mt-2 bg-[#111111] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-              {['Lombok', 'Bali'].map(opt => (
+              {['Lombok (Seluruh Area)', 'Bandara Lombok (BIL)', 'Mataram', 'Senggigi', 'Kuta Mandalika'].map(opt => (
                 <div 
                   key={opt}
                   onClick={() => { setLocation(opt); setLocOpen(false); }}

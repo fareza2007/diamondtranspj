@@ -13,15 +13,15 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   metadataBase: new URL("https://diamondtrans.cloud"),
   title: {
-    default: "Diamond Trans - Rental Mobil Lombok & Bali Murah & Terpercaya",
+    default: "Diamond Trans - Rental Mobil Lombok Murah & Terpercaya",
     template: "%s | Diamond Trans",
   },
-  description: "Layanan rental mobil terpercaya di Lombok & Bali lepas kunci atau dengan sopir. Paket tour wisata, hotel + travel, dan sewa mobil MotoGP Mandalika terbaik.",
+  description: "Layanan rental mobil terpercaya di Lombok lepas kunci atau dengan sopir. Paket tour wisata, antar-jemput bandara BIL, dan sewa mobil MotoGP Mandalika terbaik.",
   keywords: [
     "rental mobil lombok",
     "sewa mobil lombok",
-    "rental mobil bali",
-    "sewa mobil bali",
+    "antar jemput bandara lombok",
+    "pick up service bandara lombok",
     "diamond trans",
     "rental mobil mandalika",
     "paket tour lombok",
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "id_ID",
     url: "https://diamondtrans.cloud",
-    title: "Diamond Trans - Rental Mobil Lombok & Bali",
-    description: "Platform rental mobil terpercaya di Lombok dan Bali. Armada lengkap, paket tour hotel + travel, konfirmasi instan via WhatsApp.",
+    title: "Diamond Trans - Rental Mobil Lombok",
+    description: "Platform rental mobil terpercaya di Lombok. Armada lengkap, paket tour wisata, antar-jemput bandara BIL, konfirmasi instan via WhatsApp.",
     siteName: "Diamond Trans",
   },
 };

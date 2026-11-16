@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AntarJemputPage() {
   const transfers = await getTransfers(true);
-  const adminWa = process.env.NEXT_PUBLIC_ADMIN_WA || "6285137352454";
+  const adminWa = process.env.NEXT_PUBLIC_ADMIN_WA || "6287796017325";
 
   return (
     <div className="bg-background min-h-screen py-10 md:py-16">

@@ -98,7 +98,7 @@ export default function BookingClient({ car, events = [] }: { car: any; events?:
       return;
     }
 
-    const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || '6285137352454';
+    const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || '6287796017325';
     const days = getDays();
     const durationNote = formData.type === 'dengan_sopir'
       ? ` (Per ${car.driver_duration_hours} Jam/Hari)`

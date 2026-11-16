@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Katalog Armada - Diamond Trans",
-  description: "Pilih mobil terbaik untuk perjalanan Anda di Lombok dan Bali.",
+  description: "Pilih mobil terbaik untuk perjalanan Anda di Lombok.",
 };
 
 export const dynamic = "force-dynamic";

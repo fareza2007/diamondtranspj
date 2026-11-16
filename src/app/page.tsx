@@ -5,8 +5,8 @@ import { formatEventRange } from "@/lib/gp";
 import { getCars, getEvents, getPackages, getTransfers } from "@/lib/db";
 
 export const metadata = {
-  title: "Beranda - Diamond Trans Rental Mobil Lombok & Bali",
-  description: "Platform rental mobil terpercaya di Lombok dan Bali. Armada lengkap, paket tour hotel + travel, harga transparan, konfirmasi instan via WhatsApp.",
+  title: "Beranda - Diamond Trans Rental Mobil Lombok",
+  description: "Platform rental mobil terpercaya di Lombok. Armada lengkap, paket tour hotel + travel, harga transparan, konfirmasi instan via WhatsApp.",
 };
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function Home() {
     getTransfers(true),
   ]);
 
-  const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || "6285137352454";
+  const ADMIN_WA = process.env.NEXT_PUBLIC_ADMIN_WA || "6287796017325";
 
   return (
     <div className="flex flex-col">
@@ -28,7 +28,7 @@ export default async function Home() {
         {/* Background Image */}
         <Image
           src="/hero-landscape.jpg"
-          alt="Keindahan Lombok dan Bali"
+          alt="Keindahan Pulau Lombok"
           fill
           className="object-cover object-center"
           priority
@@ -45,7 +45,7 @@ export default async function Home() {
               Diamond Trans
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6 tracking-tight">
-              Eksplorasi Keindahan <span className="text-gold">Lombok & Bali</span> Bersama Kami
+              Eksplorasi Keindahan <span className="text-gold">Pulau Lombok</span> Bersama Kami
             </h1>
             <p className="text-lg text-white/80 mb-8 max-w-lg leading-relaxed">
               Pilih dari armada terawat kami, siap memberikan Anda pengalaman perjalanan yang aman, nyaman, dan bebas ribet.
